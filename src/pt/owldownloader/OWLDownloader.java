@@ -1,6 +1,7 @@
 package pt.owldownloader;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import pt.owldownloader.object.BioontologyDownloader;
 
@@ -11,6 +12,16 @@ import pt.owldownloader.object.BioontologyDownloader;
  */
 public class OWLDownloader {
 
+	/**
+	 * 
+	 */
+	private static String TEMPLATECONFIGFILE = "owlsql-config-template.json";
+	
+	/**
+	 * 
+	 */
+	private static String TARGETCONFIGFILE = "owlsql-config.json";
+	
 	/**
 	 * 
 	 */
@@ -29,13 +40,29 @@ public class OWLDownloader {
 		BioontologyDownloader bInstance = new BioontologyDownloader();
 		bInstance.setApiKey(APIKEY);
 		bInstance.setBaseURL(BASEURL);
+				
+		// 
+		JSONArray ontologiesIRIs = bInstance.getOntologiesList();
 		
-		JSONArray ontologies = bInstance.getOntologiesList();
-		for (int index = 0; index < ontologies.length(); index++) {
-			System.out.println(ontologies.get(index));
+		//
+		ConfigEditor eInstance = new ConfigEditor(TEMPLATECONFIGFILE, TARGETCONFIGFILE);
+		eInstance.readConfiguration();
+		
+		//
+		String jsonKey = "ontologies";
+		JSONArray ontologiesList = eInstance.getArrayParameter(jsonKey);
+		for (int index = 0; index < ontologiesIRIs.length(); index++) {
+			JSONObject ontology = ontologiesIRIs.getJSONObject(index);
+			String ontologyIRI = ontology.getString("download");
+			ontologiesList.put(ontologyIRI);
 		}
 		
+		//
+		eInstance.writeParameter(jsonKey, ontologiesList);
 		
+		//
+		eInstance.writeConfiguration();
+
 
 	}
 
