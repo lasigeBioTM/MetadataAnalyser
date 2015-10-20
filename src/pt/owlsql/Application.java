@@ -592,6 +592,57 @@ public final class Application {
         }
     }
     
+    /**
+     * 
+     * @throws SQLException
+     */
+    private static void createPLObjects() throws SQLException {
+        String database = Config.getDatabase();
+        try (Connection connection = Config.connectToSQLServer()) {
+                 
+            // The connection was opened outside of any database; just select the one created here
+            connection.setCatalog(database);
+            
+            // Create the metadata tables
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate("" //
+                        + "CREATE DEFINER = `owltosql` @`%` "
+						+ "FUNCTION `f_concept_ancestors_count`(owl_obj_id INTEGER(10)) "
+						+	  "RETURNS int(11) "
+						+ "BEGIN "
+						+	   "DECLARE result_value   INTEGER DEFAULT 0; "
+						+	     "-- get all ancestors count for the given concept "
+						+	     "SELECT count(h.superclass) hopcount "
+						+	       "INTO result_value "
+						+	       "FROM owltosql.hierarchy h "
+						+	            "INNER JOIN owltosql.owl_objects o ON h.superclass = o.id "
+						+	            "INNER JOIN owltosql.names n ON h.superclass = n.id "
+						+	      "WHERE     o.type = 'Class' "
+						+	            "AND h.subclass = owl_obj_id "
+						+	            "AND h.superclass <> owl_obj_id "
+						+	   "ORDER BY h.distance DESC, h.superclass; "
+						+	   "RETURN (result_value); "
+						+ "END"
+                        );
+                
+                statement.executeUpdate("" //
+                		+ "CREATE DEFINER = `owltosql` @`%` "
+                		+ "FUNCTION `f_get_owlid_from_iri`(concept_iri VARCHAR(100)) "
+                		+   "RETURNS int(11) "
+                		+ "BEGIN "
+                		+   "DECLARE result_value   INTEGER DEFAULT 0; "
+                		+   "SELECT o.id "
+                		+     "INTO result_value "
+                		+     "FROM owltosql.owl_objects o "
+                		+    "WHERE LOWER(o.iri) = LOWER(concept_iri); "
+                		+   "RETURN result_value; "
+                		+"END "
+                		);
+                
+                
+            }
+        }
+    }
     
     public static void main(String[] args) {
         processArguments(args);
