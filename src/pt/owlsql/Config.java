@@ -1,6 +1,7 @@
 package pt.owlsql;
 
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
@@ -14,19 +15,23 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
-import pt.json.JSONException;
-import pt.owlsql.extractors.SQLCoreUtils;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import au.com.bytecode.opencsv.CSVWriter;
+import pt.json.JSONException;
+import pt.ma.downloader.object.BioontologyDownloader;
+import pt.owlsql.extractors.SQLCoreUtils;
 
 
 public final class Config {
@@ -363,7 +368,76 @@ public final class Config {
             ontologiesURI.add(uri);
         }
     }
-    
+
+    /**
+     * 
+     * @param owlstartindex
+     * @param owloffset
+     * @throws JSONException
+     */
+    private static void processOntologiesFromURL(
+    		int owlstartindex, 
+    		int owloffset) 
+    				throws JSONException {
+    	
+    	// reads JSON object from configuration file
+        JsonElement element = doc.get("owlrepo");
+        if (element == null) {
+            return;
+        } else if (!element.isJsonObject()) {
+            throw new JSONException("must be a JSON object", "owlrepo");
+        }
+        
+        // check object integrity
+        JsonObject owlrepo = element.getAsJsonObject();
+        if (!(owlrepo.has("baseurl") && owlrepo.has("apikey"))) {
+        	throw new JSONException("must have a baseurl and apikey member", "owlrepo");
+        }
+        
+        //
+		BioontologyDownloader bInstance = new BioontologyDownloader();
+		bInstance.setApiKey(owlrepo.get("apikey").getAsString());
+		bInstance.setBaseURL(owlrepo.get("baseurl").getAsString());
+				
+		// 
+		JSONArray ontologiesIRIs = bInstance.getOntologiesJSONArray(); 
+		if (!(ontologiesIRIs != null && ontologiesIRIs.length() > 0)) {
+			throw new JSONException("there aren't no ontologies available", "owlrepo");
+		} 
+		
+		//
+		String jsonKey = "ontologies";
+		for (int index = owlstartindex; owloffset > 0 && index < ontologiesIRIs.length(); index++) {
+			
+			// read the actual URL address for this ontology
+			JSONObject ontology = ontologiesIRIs.getJSONObject(index);
+			String ontologyIRI = ontology.getString("download");
+			if (ontologiesURI.contains(ontologyIRI)) {
+                throw new JSONException("Duplicate ontology uri " + ontologyIRI, "ontologies", "[" + index + "]");
+			}
+			
+			URI uri;
+            try {
+                uri = URI.create(resolve(ontologyIRI)).normalize();
+            }
+            catch (IllegalArgumentException e) {
+                throw new JSONException("Malformed URL", e, "ontologies", "[" + index + "]");
+            }
+            catch (JSONException e) {
+                throw e.withPrefix("ontologies", "[" + index + "]");
+            }
+            
+            if (ontologiesURI.contains(uri))
+                throw new JSONException("Duplicate ontology uri " + uri, "ontologies", "[" + index + "]");
+            
+            ontologiesURI.add(uri);
+            
+            //
+            owloffset--;
+		}
+		
+
+    }
     
     private static void processSQLParams() throws JSONException {
         JsonElement element = doc.get("mysql");
@@ -407,13 +481,33 @@ public final class Config {
         
         detectVariableCycles();
     }
-    
-    
-    private static void readDocument() throws JSONException {
+
+    /**
+     * 
+     * @param owlsource
+     * @param owlstartindex
+     * @param owloffset
+     * @throws JSONException
+     */
+    private static void readDocument(
+    		int owlsource, 
+    		int owlstartindex, 
+    		int owloffset) 
+    				throws JSONException {
+    	
         processVariables();
         processSQLParams();
-        processOntologies();
+        switch (owlsource) {
+			case 1:
+				processOntologiesFromURL(owlstartindex, owloffset);
+				break;
+	
+			default:
+				processOntologies();
+				break;
+		}
         processExtractors();
+        
     }
     
     
@@ -526,35 +620,84 @@ public final class Config {
      *             by OWLtoSQL.
      * @throws OWLOntologyCreationException If there was a problem in creating and loading the ontology. See
      *             documentation for {@link OWLOntologyManager#loadOntologyFromOntologyDocument(IRI)}.
+     * @throws IOException 
      */
-    static HashSet<OWLOntology> loadOntologies() throws OwlSqlException, OWLOntologyCreationException {
+    static HashSet<OWLOntology> loadOntologies() throws IOException {
         OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
         
-        System.out.println("Loading ontologies ...");
-        ontologies = new HashSet<>();
+        // open writer streams, with append option
+        CSVWriter owlLoaded = new CSVWriter(new FileWriter("owlloaded.csv", true ), ';');
+        CSVWriter owlNotLoaded = new CSVWriter(new FileWriter("owlnotloaded.csv", true), ';');
+        
+        System.out.println("Loading " + ontologiesURI + " ontologies ...");
+        int count = 0; ontologies = new HashSet<>();
         for (URI uri : ontologiesURI) {
+        	
             IRI iri = IRI.create(uri);
             System.out.println("  " + uri);
-            OWLOntology ontology = manager.loadOntology(iri);
-            if (ontology.isAnonymous())
-                throw new OwlSqlException("Anonymous ontologies are not compatible with OWLtoSQL.");
-            
-            ontologies.add(ontology);
+            OWLOntology ontology = null; long startPoint = 0; long duration = 0;
+			try {
+				
+				// parse the given ontology
+				startPoint = System.currentTimeMillis();
+				ontology = manager.loadOntology(iri);
+	            if (ontology.isAnonymous()) {
+	                throw new OwlSqlException("Anonymous ontologies are not compatible with OWLtoSQL.");
+	            }
+	            ontologies.add(ontology);
+	            
+	            // log a sucessfull ontologie entry
+	            duration = System.currentTimeMillis() - startPoint;
+	            String entry = uri + "#" + duration;
+	            owlLoaded.writeNext(entry.split("#"));
+	            
+	            
+			} catch (OWLOntologyCreationException e) {
+				// log a unsucessfull ontologie entry
+	            duration = System.currentTimeMillis() - startPoint;
+	            String entry = uri + "#" + duration + "#" + e.getMessage();
+	            owlNotLoaded.writeNext(entry.split("#"));
+	            
+			} catch (OwlSqlException e) {
+				// log a unsucessfull ontologie entry
+	            duration = System.currentTimeMillis() - startPoint;
+	            String entry = uri + "#" + duration + "#" + e.getMessage();
+	            owlNotLoaded.writeNext(entry.split("#"));
+				
+			}
         }
+        
+        // close and write 
+        owlLoaded.close(); owlNotLoaded.close();
         
         return ontologies;
     }
-    
-    
-    static void read(String filename) throws IOException, JSONException {
-        try (FileInputStream stream = new FileInputStream(filename)) {
+
+    /**
+     * 
+     * @param filename
+     * @param owlsource
+     * @param owlstartindex
+     * @param owloffset
+     * @throws IOException
+     * @throws JSONException
+     */
+    static void read(
+    		String filename, 
+    		int owlsource, 
+    		int owlstartindex, 
+    		int owloffset) 
+    				throws IOException, JSONException {
+    	
+    	//
+        try (FileInputStream stream = new FileInputStream("configfiles/" + filename)) {
             JsonParser parser = new JsonParser();
             try (InputStreamReader reader = new InputStreamReader(stream)) {
                 doc = parser.parse(reader).getAsJsonObject();
             }
         }
         
-        readDocument();
+        readDocument(owlsource, owlstartindex, owloffset);
     }
     
     

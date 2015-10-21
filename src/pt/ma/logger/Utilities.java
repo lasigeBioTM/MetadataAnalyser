@@ -1,4 +1,4 @@
-package pt.owldownloader.logging;
+package pt.ma.logger;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;

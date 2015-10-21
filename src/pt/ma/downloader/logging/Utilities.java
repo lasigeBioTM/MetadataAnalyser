@@ -1,4 +1,4 @@
-package pt.logging;
+package pt.ma.downloader.logging;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;

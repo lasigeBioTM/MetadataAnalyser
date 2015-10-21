@@ -14,7 +14,7 @@ public class Client {
     
     public static void connect(String configFilename) throws IOException, JSONException, SQLException {
         // Read the configuration file
-        Config.read(configFilename);
+        Config.read(configFilename, 0, 0, 0);
         
         // Connect to the database and instantiate the necessary extractors
         connection = Config.connectToDatabase();

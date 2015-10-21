@@ -1,4 +1,4 @@
-package pt.owldownloader;
+package pt.ma.downloader;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

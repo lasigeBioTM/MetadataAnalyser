@@ -19,8 +19,6 @@ import java.util.logging.Logger;
 
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
-import pt.json.JSONException;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
@@ -28,6 +26,7 @@ import difflib.Delta;
 import difflib.Delta.TYPE;
 import difflib.DiffUtils;
 import difflib.Patch;
+import pt.json.JSONException;
 
 
 /**
@@ -65,6 +64,9 @@ public final class Application {
     
     private static boolean simulate = false;
     private static Timestamp lastExecuted = null;
+    private static int owlsource = 0; // 0 - from configuration file; 1 - from owl repository
+    private static int owlstartindex = 0;
+    private static int owloffset = 0;
     
     private static int originalNextIndex;
     
@@ -528,17 +530,36 @@ public final class Application {
             if (args[i].equals("-c") || args[i].equals("--config")) {
                 i++;
                 configFilename = args[i];
-            }
-            
-            else if (args[i].equals("-s") || args[i].equals("--simulate"))
+                
+            } else if (args[i].equals("-s") || args[i].equals("--simulate")) {
                 simulate = true;
             
-            else
+            } else if (args[i].equals("-u") || args[i].equals("--owlsource")) {
+            	switch (args[++i].toLowerCase()) {
+					case "repo":
+						owlsource = 1; // external owl repository
+						break;
+					default:
+						owlsource = 0; // defaults to configuration file
+				}
+            	
+            } else if (args[i].equals("-i") || args[i].equals("--startindex")) {
+            	owlstartindex = Integer.parseInt(args[++i]);
+            	
+            } else if (args[i].equals("-o") || args[i].equals("--offset")) {
+            	owloffset = Integer.parseInt(args[++i]); 
+            	
+            } else
                 exit("Unrecognized command line argument " + args[i]);
         }
         
         try {
-            Config.read(configFilename);
+            Config.read(
+            		configFilename, 
+            		owlsource, 
+            		owlstartindex, 
+            		owloffset);
+            
         }
         catch (IOException | JSONException e) {
             exit("Unable to read from configuration file", e);
@@ -628,18 +649,20 @@ public final class Application {
                 statement.executeUpdate("" //
                 		+ "CREATE DEFINER = `owltosql` @`%` "
                 		+ "FUNCTION `f_get_owlid_from_iri`(concept_iri VARCHAR(100)) "
-                		+   "RETURNS int(11) "
+                		+      "RETURNS int(11) "
                 		+ "BEGIN "
-                		+   "DECLARE result_value   INTEGER DEFAULT 0; "
-                		+   "SELECT o.id "
-                		+     "INTO result_value "
-                		+     "FROM owltosql.owl_objects o "
-                		+    "WHERE LOWER(o.iri) = LOWER(concept_iri); "
-                		+   "RETURN result_value; "
+                		+   	"DECLARE result_value   INTEGER DEFAULT 0; "
+                		+   	"SELECT o.id "
+                		+     		"INTO result_value "
+                		+     		"FROM owltosql.owl_objects o "
+                		+    	"WHERE LOWER(o.iri) = LOWER(concept_iri); "
+                		+   	"RETURN result_value; "
                 		+"END "
                 		);
                 
-                
+                statement.executeUpdate("" //
+                		
+                		);
             }
         }
     }
@@ -660,8 +683,8 @@ public final class Application {
         try {
             Config.loadOntologies();
         }
-        catch (OWLOntologyCreationException | OwlSqlException e) {
-            exit("Error on loading the ontologies", e);
+        catch (IOException e) {
+            exit("Error on loading the ontologies", e);	
         }
         
         try {

@@ -1,4 +1,4 @@
-package pt.owldownloader.logging;
+package pt.ma.downloader.logging;
 
 import java.io.Closeable;
 

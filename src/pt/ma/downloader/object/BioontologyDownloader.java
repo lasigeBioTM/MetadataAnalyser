@@ -1,4 +1,4 @@
-package pt.owldownloader.object;
+package pt.ma.downloader.object;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -29,7 +29,7 @@ public class BioontologyDownloader extends ADownloader {
 	}
 
 	@Override
-	public JSONArray getOntologiesList() {
+	public JSONArray getOntologiesJSONArray() {
 		JSONArray result = null;
 
 		//

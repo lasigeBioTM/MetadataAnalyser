@@ -1,4 +1,4 @@
-package pt.logging;
+package pt.ma.logger;
 
 import java.io.Closeable;
 import java.io.IOException;

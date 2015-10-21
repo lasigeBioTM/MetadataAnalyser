@@ -1,9 +1,9 @@
-package pt.owldownloader;
+package pt.ma.downloader;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import pt.owldownloader.object.BioontologyDownloader;
+import pt.ma.downloader.object.BioontologyDownloader;
 
 /**
  * 
@@ -42,7 +42,7 @@ public class OWLDownloader {
 		bInstance.setBaseURL(BASEURL);
 				
 		// 
-		JSONArray ontologiesIRIs = bInstance.getOntologiesList();
+		JSONArray ontologiesIRIs = bInstance.getOntologiesJSONArray();
 		
 		//
 		ConfigEditor eInstance = new ConfigEditor(TEMPLATECONFIGFILE, TARGETCONFIGFILE);

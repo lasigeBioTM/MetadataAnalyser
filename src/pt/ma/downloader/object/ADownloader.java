@@ -1,4 +1,4 @@
-package pt.owldownloader.object;
+package pt.ma.downloader.object;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,7 +31,7 @@ public abstract class ADownloader {
 	 * 
 	 * @return JSONArray
 	 */
-	public abstract JSONArray getOntologiesList();
+	public abstract JSONArray getOntologiesJSONArray();
 	
 	/**
 	 * 
