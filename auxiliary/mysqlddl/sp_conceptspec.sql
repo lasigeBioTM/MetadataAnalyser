@@ -1,10 +1,10 @@
 CREATE DEFINER = `owltosql` @`%`
-PROCEDURE `sp_conceptspec`(IN  concept_iri   VARCHAR(100),
-                           OUT spec_value    NUMERIC(6, 4))
+PROCEDURE `sp_conceptspec`(IN concept_iri VARCHAR(100))
    READS SQL DATA
 BEGIN
    /**/
-   -- DECLARE spec_value                         NUMERIC(6, 4);
+   DECLARE spec_value                         NUMERIC(6, 4);
+   -- DECLARE aux								  VARCHAR(200);
    --
    DECLARE owl_obj_id                         INTEGER DEFAULT 0;
    DECLARE concept_ancestors_count            INTEGER DEFAULT 0;
@@ -29,7 +29,8 @@ BEGIN
                   INNER JOIN owltosql.owl_objects o ON h.subclass = o.id
                   INNER JOIN owltosql.names n ON h.subclass = n.id
                   INNER JOIN owltosql.leaves l ON h.subclass = l.id
-            WHERE     h.superclass = (SELECT w.id
+            WHERE      o.type = 'Class' AND
+      h.superclass = (SELECT w.id
                                         FROM owltosql.owl_objects w
                                        WHERE LOWER(w.iri) = LOWER(concept_iri))
                   AND h.superclass <> h.subclass
@@ -61,10 +62,20 @@ BEGIN
          -- check for best case scenario, concept is a leaf ontology node
          IF leaf_descendents_count > 0
          THEN
+            SET leaft_concept_delta_sum = 0;                 -- SET aux = 'S';
+
            leaf_loop:
             LOOP
                FETCH leaf_descendents_cursor
                   INTO subclass_val, name_val, distance_val;
+
+               -- break loop condition
+               IF no_more_rows
+               THEN
+                  CLOSE leaf_descendents_cursor;
+
+                  LEAVE leaf_loop;
+               END IF;
 
                -- get ancestors count for this leaf subclass concept
                SELECT owltosql.f_concept_ancestors_count(subclass_val)
@@ -74,14 +85,7 @@ BEGIN
                SET leaft_concept_delta_sum =
                         leaft_concept_delta_sum
                       + (leaf_ancestors_count - concept_ancestors_count);
-
-               -- break loop condition
-               IF no_more_rows
-               THEN
-                  CLOSE leaf_descendents_cursor;
-
-                  LEAVE leaf_loop;
-               END IF;
+               -- SET aux = CONCAT(aux, ';', (leaf_ancestors_count - concept_ancestors_count));
 
                -- print out statement
                -- SELECT subclass_val, name_val, distance_val;
@@ -94,17 +98,20 @@ BEGIN
             THEN
                -- calcule specification metric for the given concept
                SET spec_value =
-                      ROUND(
-                         (  concept_ancestors_count
-                          / (  concept_ancestors_count
-                             + (leaft_concept_delta_sum / loop_cntr))),
-                         4);
+                      (  concept_ancestors_count
+                       / (  concept_ancestors_count
+                          + (leaft_concept_delta_sum / loop_cntr)));
             ELSE
                -- something went wrong in delta calculus
                SET spec_value = 0;
+
+               SELECT spec_value;
             END IF;
 
-            SELECT leaft_concept_delta_sum,
+            -- SELECT aux;
+            SELECT concept_ancestors_count,
+                   leaf_ancestors_count,
+                   leaft_concept_delta_sum,
                    loop_cntr,
                    spec_value,
                    (leaft_concept_delta_sum / loop_cntr);
@@ -113,13 +120,19 @@ BEGIN
 
             -- this is a leaf concept, set the highest spec value
             SET spec_value = 1;
+
+            SELECT spec_value;
          END IF;
       ELSE
          -- this is a top concept in the ontology hierarchy
          SET spec_value = 0;
+
+         SELECT spec_value;
       END IF;
    ELSE
       -- this is not a valid concept, set the least spec value
       SET spec_value = 0;
+
+      SELECT spec_value;
    END IF;
 END

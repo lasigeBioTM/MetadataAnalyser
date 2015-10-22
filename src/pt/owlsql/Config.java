@@ -436,7 +436,7 @@ public final class Config {
             owloffset--;
 		}
 		
-
+		System.out.println(ontologiesURI.size());
     }
     
     private static void processSQLParams() throws JSONException {
@@ -629,12 +629,15 @@ public final class Config {
         CSVWriter owlLoaded = new CSVWriter(new FileWriter("owlloaded.csv", true ), ';');
         CSVWriter owlNotLoaded = new CSVWriter(new FileWriter("owlnotloaded.csv", true), ';');
         
-        System.out.println("Loading " + ontologiesURI + " ontologies ...");
-        int count = 0; ontologies = new HashSet<>();
+        // blank lines
+        owlLoaded.writeNext(" ".split(",")); owlNotLoaded.writeNext(" ".split(","));
+        
+        System.out.println("Loading " + ontologiesURI.size() + " ontologies ...");
+        int count = 1; ontologies = new HashSet<>();
         for (URI uri : ontologiesURI) {
-        	
+
             IRI iri = IRI.create(uri);
-            System.out.println("  " + uri);
+            System.out.println("  #" + count++ + " " + uri);
             OWLOntology ontology = null; long startPoint = 0; long duration = 0;
 			try {
 				
@@ -648,14 +651,14 @@ public final class Config {
 	            
 	            // log a sucessfull ontologie entry
 	            duration = System.currentTimeMillis() - startPoint;
-	            String entry = uri + "#" + duration;
+	            String entry = uri + "#" + duration + "#" + ontology.getAxiomCount();
 	            owlLoaded.writeNext(entry.split("#"));
 	            
 	            
 			} catch (OWLOntologyCreationException e) {
 				// log a unsucessfull ontologie entry
 	            duration = System.currentTimeMillis() - startPoint;
-	            String entry = uri + "#" + duration + "#" + e.getMessage();
+	            String entry = uri + "#" + duration + "#"  + e.getMessage();
 	            owlNotLoaded.writeNext(entry.split("#"));
 	            
 			} catch (OwlSqlException e) {
@@ -664,6 +667,11 @@ public final class Config {
 	            String entry = uri + "#" + duration + "#" + e.getMessage();
 	            owlNotLoaded.writeNext(entry.split("#"));
 				
+			} catch (Exception e) {
+				// log a unsucessfull ontologie entry
+	            duration = System.currentTimeMillis() - startPoint;
+	            String entry = uri + "#" + duration + "#" + e.getMessage();
+	            owlNotLoaded.writeNext(entry.split("#"));			
 			}
         }
         

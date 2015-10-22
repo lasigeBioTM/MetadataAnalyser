@@ -1,0 +1,125 @@
+" "
+"http://data.bioontology.org/ontologies/GEOSPECIES/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"668";"Could not load imported ontology: <http://rdf.geospecies.org/methods/observationMethod.rdf> Cause: http://rdf.geospecies.org/methods/observationMethod.rdf"
+"http://data.bioontology.org/ontologies/TEO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"4471";"Could not load imported ontology: <http://www.co-ode.org/ontologies/lists/2008/09/11/list.owl> Cause: http://www.co-ode.org/ontologies/lists/2008/09/11/list.owl"
+"http://data.bioontology.org/ontologies/MOOCCUADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"230";"http://data.bioontology.org/ontologies/MOOCCUADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/IDO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"6360";"Could not load imported ontology: <http://purl.obolibrary.org/obo/ido/ido-main.owl> Cause: Could not load imported ontology: <http://www.obofoundry.org/ro/ro.owl> Cause: http://www.obofoundry.org/ro/ro.owl"
+"http://data.bioontology.org/ontologies/TMA/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"290";"Anonymous ontologies are not compatible with OWLtoSQL."
+"http://data.bioontology.org/ontologies/PSIMOD/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"8066";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/PSIMOD/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/PW/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"4844";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/PW/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/OGSF/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2176";"Could not load imported ontology: <http://purl.obolibrary.org/obo/OGI.owl> Cause: Could not load imported ontology: <http://purl.obolibrary.org/obo/ogi/CHEBI_import.owl> Cause: http://www.berkeleybop.org/ontologies/ogi/CHEBI_import.owl"
+"http://data.bioontology.org/ontologies/OBOREL/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2594";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/OBOREL/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/MOOCCIADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"280";"http://data.bioontology.org/ontologies/MOOCCIADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/PHENOMEBLAST/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"502";"http://data.bioontology.org/ontologies/PHENOMEBLAST/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/BP-METADATA/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"3148";"Could not load imported ontology: <http://protege.stanford.edu/ontologies/mappings/mappings.rdfs> Cause: http://protege.stanford.edu/ontologies/mappings/mappings.rdfs"
+" "
+"http://data.bioontology.org/ontologies/APAONTO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"37591";"Anonymous ontologies are not compatible with OWLtoSQL."
+"http://data.bioontology.org/ontologies/TRANS/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"1883";"Anonymous ontologies are not compatible with OWLtoSQL."
+"http://data.bioontology.org/ontologies/PTO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"7983";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/PTO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/GTO_TESTING/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"242";"http://data.bioontology.org/ontologies/GTO_TESTING/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/COGPO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2831";"Could not load imported ontology: <http://purl.obolibrary.org/obo/iao/dev/iao-main.owl> Cause: Could not load imported ontology: <http://purl.obolibrary.org/obo/ro/releases/2015-02-11/core.owl> Cause: https://raw.githubusercontent.com/oborel/obo-relations/v2015-02-11/core.owl"
+"http://data.bioontology.org/ontologies/AAO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"401";"http://data.bioontology.org/ontologies/AAO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/CANONT/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2521";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/CANONT/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/EFO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"3097";"Ontology already exists. OntologyID(OntologyIRI(<http://www.ebi.ac.uk/efo/efo.owl>))"
+"http://data.bioontology.org/ontologies/RB/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"505";"Could not load imported ontology: <http://regenbase.org/ontologies/regenbase_metadata.owl> Cause: http://regenbase.org/ontologies/regenbase_metadata.owl"
+"http://data.bioontology.org/ontologies/APADISORDERS/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2565";"Could not load imported ontology: <http://alexandergarcia.name/ontos/disorders/DisorderCharacteristics.owl> Cause: Server returned HTTP response code: 403 for URL: http://www.alexandergarcia.name/ontos/disorders/DisorderCharacteristics.owl"
+" "
+"http://data.bioontology.org/ontologies/PEO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"968";"Could not load imported ontology: <http://knoesis.wright.edu/provenir/provenir.owl> Cause: http://knoesis.wright.edu/provenir/provenir.owl"
+"http://data.bioontology.org/ontologies/GTO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"209";"http://data.bioontology.org/ontologies/GTO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/VARIO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"3080";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/VARIO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/OGMD/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2381";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/OGMD/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/LEGALAPATEST2/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"1236";"Could not load imported ontology: <http://alexandergarcia.name/ontos/legal/Adjudication_cluster.owl> Cause: Server returned HTTP response code: 403 for URL: http://www.alexandergarcia.name/ontos/legal/Adjudication_cluster.owl"
+"http://data.bioontology.org/ontologies/PHMAMMADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"270";"http://data.bioontology.org/ontologies/PHMAMMADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/GLYCO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"11692";"Could not load imported ontology: <http://purl.org/obo/owl/ro> Cause: http://www.obofoundry.org/ro/ro.owl"
+"http://data.bioontology.org/ontologies/RCTONT/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"4960";"Could not load imported ontology: <http://www.owl-ontologies.com/assert.owl> Cause: Problem parsing http://www.owl-ontologies.com/assert.owl
+Could not parse ontology.  Either a suitable parser could not be found, or parsing failed.  See parser logs below for explanation.
+The following parsers were tried:
+1) RDFXMLParser
+2) OWLXMLParser
+3) OWLFunctionalSyntaxOWLParser
+4) TurtleOntologyParser
+5) KRSS2OWLParser
+6) ManchesterOWLSyntaxOntologyParser
+7) OBOFormatOWLAPIParser
+8) OWLOBO12Parser
+
+
+Detailed logs:
+--------------------------------------------------------------------------------
+Parser: RDFXMLParser
+org.semanticweb.owlapi.rdf.syntax.RDFParserException: [line=5:column=243] Expecting rdf:RDF element.
+
+--------------------------------------------------------------------------------
+Parser: OWLXMLParser
+org.xml.sax.SAXParseException; systemId: http://www.owl-ontologies.com/assert.owl; lineNumber: 38; columnNumber: 106; The element type ""meta"" must be terminated by the matching end-tag ""</meta>"".
+
+--------------------------------------------------------------------------------
+Parser: OWLFunctionalSyntaxOWLParser
+Encountered "" <FULLIRI> ""<!--\r\n\ttop.location=\""http://ww1.owl-ontologies.com/?fp=vp8rzFuWompNxrs7ZhSbM06gARG2xJvjbrR0WlT9Kb%2BDaQuQ%2Bz7yi7SJBjPeK3Oa0EIxhfceQW%2BXnazip02TRQ%3D%3D&prvtof=hlfndrgqBE5otEL1qlTcsrWJ6%2FE292Uvg22zZ%2BCJgnQ%3D&poru=NPv0WzxVL274mMuNSwTRD0piTvX1ernsVaYrImTsrSDM5IvxX6DmlKnhycPzZta3&cifr=1&\"";\r\n\t/*\r\n--> """" at line 1, column 1.
+Was expecting:
+    ""Ontology"" ...
+     (Line 0)
+
+--------------------------------------------------------------------------------
+Parser: TurtleOntologyParser
+uk.ac.manchester.cs.owl.owlapi.turtle.parser.ParseException: Encountered """" at line 1, column 1.
+Was expecting one of:
+    
+
+--------------------------------------------------------------------------------
+Parser: KRSS2OWLParser
+de.uulm.ecs.ai.owlapi.krssparser.ParseException: Encountered "" "">"" ""<!--\r\n\ttop.location=\""http://ww1.owl-ontologies.com/?fp=TNJDhbbQ0myOPbQXGEAjux1XMEYMhAErpSBuh3NB52bptHg5lkB%2FBjOdMLwXKE6ebmrJv5hH0x7VvoZP0j%2BKEA%3D%3D&prvtof=MAiHbedwzoRplrK92xJ0a1A3fKp1w092lKYDOG0hQXg%3D&poru=eh0Ffs8yOkl6aXUO2TdYwdGFM8jHb6lB5Pme9HJA%2F6A1%2BvDj9MHg5Plvwi3yw4%2Fa&cifr=1&\"";\r\n\t/*\r\n--> """" at line 1, column 1.
+Was expecting:
+    <EOF> 
+    
+
+--------------------------------------------------------------------------------
+Parser: ManchesterOWLSyntaxOntologyParser
+Encountered '<!--' at line 1 column 1.  Expected either 'Ontology:' or 'Prefix:' (Line 1)
+
+--------------------------------------------------------------------------------
+Parser: OBOFormatOWLAPIParser
+LINENO: 1 - Could not find tag separator ':' in line.
+LINE: <!--
+
+--------------------------------------------------------------------------------
+Parser: OWLOBO12Parser
+org.coode.owlapi.obo12.parser.TokenMgrError: Lexical error at line 1, column 5.  Encountered: ""\r"" (13), after : """"
+
+"
+"http://data.bioontology.org/ontologies/PAE/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"6564";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/PAE/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/HIV/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"404";"http://data.bioontology.org/ontologies/HIV/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/APASTATISTICAL/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"1282";"Could not load imported ontology: <http://alexandergarcia.name/ontos/statistical/StatisticalReliabilityValidity.owl> Cause: Server returned HTTP response code: 403 for URL: http://www.alexandergarcia.name/ontos/statistical/StatisticalReliabilityValidity.owl"
+"http://data.bioontology.org/ontologies/SPD/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2722";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/SPD/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/OMRSE/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"8113";"Could not load imported ontology: <http://purl.obofoundry.org/obo/iao/d-acts/20150916/d-acts.owl> Cause: Could not load imported ontology: <http://purl.obolibrary.org/obo/iao/pno/bfo2/pno.owl> Cause: Could not load imported ontology: <http://purl.obolibrary.org/obo/ro/releases/2015-02-11/core.owl> Cause: https://raw.githubusercontent.com/oborel/obo-relations/v2015-02-11/core.owl"
+"http://data.bioontology.org/ontologies/TRAK/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"4202";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/TRAK/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/DDI/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"4186";"Could not load imported ontology: <http://www.obofoundry.org/ro/ro.owl> Cause: http://www.obofoundry.org/ro/ro.owl"
+" "
+"http://data.bioontology.org/ontologies/MEDDRA/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"605";"Server returned HTTP response code: 403 for URL: http://data.bioontology.org/ontologies/MEDDRA/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/GMM/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"1429";"Anonymous ontologies are not compatible with OWLtoSQL."
+"http://data.bioontology.org/ontologies/REX/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"4407";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/REX/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/FALL/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"985";"Could not load imported ontology: <http://www.semanticweb.org/abed/ontologies/2015/1/untitled-ontology-336> Cause: http://semanticweb.org/abed/ontologies/2015/1/untitled-ontology-336"
+"http://data.bioontology.org/ontologies/TGMA/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"7187";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/TGMA/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/PHFUMIADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"429";"http://data.bioontology.org/ontologies/PHFUMIADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/IXNO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2674";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/IXNO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/NDDF/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"210";"Server returned HTTP response code: 403 for URL: http://data.bioontology.org/ontologies/NDDF/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/FLU/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"7178";"Could not load imported ontology: <http://purl.obolibrary.org/obo/iao/iao-main.owl> Cause: Could not load imported ontology: <http://www.obofoundry.org/ro/ro.owl> Cause: http://www.obofoundry.org/ro/ro.owl"
+"http://data.bioontology.org/ontologies/HAROREADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"238";"http://data.bioontology.org/ontologies/HAROREADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/ICNP/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"407";"Server returned HTTP response code: 403 for URL: http://data.bioontology.org/ontologies/ICNP/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/PR/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"126138";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/PR/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/IGTO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"458";"http://data.bioontology.org/ontologies/IGTO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+" "
+"http://data.bioontology.org/ontologies/CISAVIADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"647";"http://data.bioontology.org/ontologies/CISAVIADO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/MAT/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2713";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/MAT/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/CHEBI/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"313609";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/CHEBI/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/FAO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"3782";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/FAO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/RNRMU/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2920";"Anonymous ontologies are not compatible with OWLtoSQL."
+"http://data.bioontology.org/ontologies/MMO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"6270";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/MMO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+"http://data.bioontology.org/ontologies/TADS/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"2793";"Server returned HTTP response code: 400 for URL: http://data.bioontology.org/ontologies/TADS/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+" "
+"http://data.bioontology.org/ontologies/EFO";"789";"Server returned HTTP response code: 401 for URL: http://data.bioontology.org/ontologies/EFO"
+" "
+"http://data.bioontology.org/ontologies/EFO";"2074";"Server returned HTTP response code: 401 for URL: http://data.bioontology.org/ontologies/EFO"
+" "
+"http://data.bioontology.org/ontologies/EFO/?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85";"4831";"Anonymous ontologies are not compatible with OWLtoSQL."
+" "
+" "
