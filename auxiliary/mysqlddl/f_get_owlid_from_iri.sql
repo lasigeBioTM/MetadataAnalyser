@@ -7,7 +7,7 @@ BEGIN
    SELECT o.id
      INTO result_value
      FROM owltosql.owl_objects o
-    WHERE LOWER(o.iri) = LOWER(concept_iri);
+    WHERE o.type = 'Class' AND LOWER(o.iri) = LOWER(concept_iri);
 
    RETURN result_value;
 END

@@ -10,7 +10,9 @@ BEGIN
        FROM owltosql.hierarchy h
             INNER JOIN owltosql.owl_objects o ON h.superclass = o.id
             INNER JOIN owltosql.names n ON h.superclass = n.id
-      WHERE h.subclass = owl_obj_id AND h.superclass <> owl_obj_id
+      WHERE     h.subclass = owl_obj_id
+            AND h.superclass <> owl_obj_id
+            AND o.type = 'Class'
    ORDER BY h.distance DESC, h.superclass;
 
    RETURN (result_value);

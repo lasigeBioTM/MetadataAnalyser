@@ -53,6 +53,7 @@ public abstract class ADownloader {
 		JSONArray result = null;
 
 		try {
+			
 			// configure the connection to be made
 			DefaultHttpClient httpClient = new DefaultHttpClient();
 			HttpGet getRequest = new HttpGet(url);

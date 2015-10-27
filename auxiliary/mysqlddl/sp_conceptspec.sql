@@ -4,7 +4,8 @@ PROCEDURE `sp_conceptspec`(IN concept_iri VARCHAR(100))
 BEGIN
    /**/
    DECLARE spec_value                         NUMERIC(6, 4);
-   -- DECLARE aux								  VARCHAR(200);
+   DECLARE start_time, end_time               BIGINT;
+   -- DECLARE aux         VARCHAR(200);
    --
    DECLARE owl_obj_id                         INTEGER DEFAULT 0;
    DECLARE concept_ancestors_count            INTEGER DEFAULT 0;
@@ -23,21 +24,37 @@ BEGIN
    DECLARE loop_cntr                          INTEGER DEFAULT 0;
 
    DECLARE
-      leaf_descendents_cursor CURSOR FOR
-           SELECT h.subclass, n.name, h.distance
-             FROM owltosql.hierarchy h
-                  INNER JOIN owltosql.owl_objects o ON h.subclass = o.id
-                  INNER JOIN owltosql.names n ON h.subclass = n.id
-                  INNER JOIN owltosql.leaves l ON h.subclass = l.id
-            WHERE      o.type = 'Class' AND
-      h.superclass = (SELECT w.id
-                                        FROM owltosql.owl_objects w
-                                       WHERE LOWER(w.iri) = LOWER(concept_iri))
-                  AND h.superclass <> h.subclass
-         ORDER BY h.distance ASC, h.subclass;
+      leaf_descendents_cursor CURSOR FOR   SELECT h.subclass,
+                                                  n.name,
+                                                  h.distance
+                                             FROM owltosql.hierarchy h
+                                                  INNER JOIN
+                                                  owltosql.owl_objects o
+                                                     ON h.subclass = o.id
+                                                  INNER JOIN owltosql.names n
+                                                     ON h.subclass = n.id
+                                                  INNER JOIN owltosql.leaves l
+                                                     ON h.subclass = l.id
+                                            WHERE     o.type = 'Class'
+                                                  AND h.superclass =
+                                                         (SELECT w.id
+                                                            FROM owltosql.owl_objects
+                                                                 w
+                                                           WHERE     w.type =
+                                                                        'Class'
+                                                                 AND LOWER(
+                                                                        w.iri) =
+                                                                        LOWER(
+                                                                           concept_iri))
+                                                  AND h.superclass <>
+                                                         h.subclass
+                                         ORDER BY h.distance ASC, h.subclass;
 
    -- declare handlers for exceptions
    DECLARE CONTINUE HANDLER FOR NOT FOUND SET no_more_rows = TRUE;
+
+   -- read the starting time, in miliseconds
+   SET start_time = UNIX_TIMESTAMP();
 
    -- get owl object id for the given concept iri
    SELECT owltosql.f_get_owlid_from_iri(concept_iri)
@@ -85,10 +102,12 @@ BEGIN
                SET leaft_concept_delta_sum =
                         leaft_concept_delta_sum
                       + (leaf_ancestors_count - concept_ancestors_count);
+
                -- SET aux = CONCAT(aux, ';', (leaf_ancestors_count - concept_ancestors_count));
 
                -- print out statement
                -- SELECT subclass_val, name_val, distance_val;
+
 
                -- count the number of times looped
                SET loop_cntr = loop_cntr + 1;
@@ -108,13 +127,19 @@ BEGIN
                SELECT spec_value;
             END IF;
 
+            --
+            SET end_time = UNIX_TIMESTAMP();
+
             -- SELECT aux;
             SELECT concept_ancestors_count,
-                   leaf_ancestors_count,
+                   loop_cntr AS 'leaf_descendents_sum',
                    leaft_concept_delta_sum,
                    loop_cntr,
                    spec_value,
-                   (leaft_concept_delta_sum / loop_cntr);
+                   (leaft_concept_delta_sum / loop_cntr),
+                   start_time,
+                   end_time,
+                   end_time - start_time;
          ELSE
             CLOSE leaf_descendents_cursor;
 
