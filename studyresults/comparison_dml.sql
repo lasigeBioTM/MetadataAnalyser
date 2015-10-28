@@ -42,6 +42,26 @@ USE owltosql;
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/SNMI/M-74200');
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/SNMI/M-74300');
 
+-- ICD10CM Ontology
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/I63.34');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/I63.3');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/I60-I69');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/M43.2');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/M43');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/M91-M94');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/E00');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/E08-E13');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/E40-E46');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/F40.1');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/F40');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/F40-F48');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/O33.6');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/O33');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/O30-O48');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/R00');
+CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/R03');
+CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/R00-R09');
+
 
 CALL sp_conceptspec('');
 
