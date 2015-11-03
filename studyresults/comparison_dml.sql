@@ -15,18 +15,18 @@ USE owltosql;
 -- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_0000006');
 
 -- OMIM Ontology
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU003422');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000376');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000224');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000004');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000477');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000106');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU001728');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU001730');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU001614');
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU001848');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000139');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000243');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000058');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000026');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU004756');
--- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU001443');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000477');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000089');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000063');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000052');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000224');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU003422');
+CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000376');
 
 -- SNMI Ontology
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/SNMI/A-13000');
@@ -59,51 +59,28 @@ USE owltosql;
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/O33');
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/O30-O48');
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/R00');
-CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/R03');
-CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/R00-R09');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/R03');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/ICD10CM/R00-R09');
+
+-- BIOMODELS Ontology
+-- CALL sp_conceptspec('http://purl.org/obo/owl/CL#CL_0000538');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/CL#CL_0000685');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/CL#CL_0000610');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/CL#CL_0000192');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/CL#CL_0000187');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/CL#CL_0000004');
+-- CALL sp_conceptspec('http://purl.org/obo/owlapi/fma#FMA_46569');
+-- CALL sp_conceptspec('http://purl.org/obo/owlapi/fma#FMA_9730');
+-- CALL sp_conceptspec('http://purl.org/obo/owlapi/fma#FMA_45723');
+-- CALL sp_conceptspec('http://purl.org/obo/owlapi/fma#FMA_66771');
+-- CALL sp_conceptspec('http://purl.org/obo/owlapi/fma#FMA_70632');
+-- CALL sp_conceptspec('http://purl.org/obo/owlapi/fma#FMA_70631');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/PATO#PATO_0002099');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/PATO#PATO_0001397');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/PATO#PATO_0001396');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/CL#CL_0000071');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/CL#CL_0000115');
+-- CALL sp_conceptspec('http://purl.org/obo/owl/CL#CL_0000215');
 
 
 CALL sp_conceptspec('');
-
-
-CALL sp_conceptspec('');
-
-
-
---SHOW profiles;
-
-SELECT UNIX_TIMESTAMP();
-
-SELECT f_get_owlid_from_iri('http://purl.bioontology.org/ontology/SNMI/A-13000');
-
-SELECT o.id
-     FROM owltosql.owl_objects o
-    WHERE o.type = 'Class' AND LOWER(o.iri) = LOWER('http://purl.bioontology.org/ontology/OMIM/MTHU000376');
-	
--- All leaf descendents query
-
-  SELECT h.subclass,
-         n.name,
-         h.distance,
-         o.iri,
-         o.type
-    FROM hierarchy h
-         INNER JOIN owl_objects o ON h.subclass = o.id
-         INNER JOIN names n ON h.subclass = n.id
-   WHERE h.superclass = 72027
-ORDER BY h.distance ASC, h.subclass;
-
-  SELECT h.subclass, n.name, h.distance
-    FROM owltosql.hierarchy h
-         INNER JOIN owltosql.owl_objects o ON h.subclass = o.id
-         INNER JOIN owltosql.names n ON h.subclass = n.id
-         INNER JOIN owltosql.leaves l ON h.subclass = l.id
-   WHERE     o.type = 'Class'
-         AND h.superclass =
-                (SELECT w.id
-                   FROM owltosql.owl_objects w
-                  WHERE LOWER(w.iri) =
-                           LOWER(
-                              'http://purl.bioontology.org/ontology/SNMI/A-13000'))
-         AND h.superclass <> h.subclass
-ORDER BY h.distance ASC, h.subclass;

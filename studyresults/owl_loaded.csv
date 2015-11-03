@@ -245,10 +245,7 @@ Order;OWL URI;Download Time (ms);Axiom Count
 244;http://data.bioontology.org/ontologies/PHENX/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;2489;3141
 245;http://data.bioontology.org/ontologies/SNMI/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;1102779;999581
 246;http://data.bioontology.org/ontologies/ECG/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;7241;7028
-; ;;
-;;;
-; ;;
-;;;
-; ;;
-;;;
-; ;;
+247;http://data.bioontology.org/ontologies/EFO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;127561;184472
+248;http://data.bioontology.org/ontologies/PROVO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;1836;973
+249;http://data.bioontology.org/ontologies/HINO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;246450;329803
+250;http://data.bioontology.org/ontologies/BAO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;23161;11345
