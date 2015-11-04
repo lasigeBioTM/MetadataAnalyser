@@ -13,7 +13,7 @@
 	"extractors": [
 			{
 				"class": "pt.owlsql.extractors.NamesExtractor",
-				"properties": [ "http://www.w3.org/2004/02/skos/core#prefLabel" ]
+				"properties": [ "http://www.w3.org/2000/01/rdf-schema#label" ]
 			},
 			{
 				"class": "pt.owlsql.extractors.HierarchyExtractor"
@@ -23,10 +23,6 @@
 			}
 		],
 	ontologies : [
-		"http://data.bioontology.org/ontologies/LOINC/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85",
-		"http://data.bioontology.org/ontologies/NBO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85",
-		"http://data.bioontology.org/ontologies/GMO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85",
-		"http://data.bioontology.org/ontologies/BAO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85",
-		"http://data.bioontology.org/ontologies/GO-PLUS/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+		"http://data.bioontology.org/ontologies/VTO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
 	]
 }

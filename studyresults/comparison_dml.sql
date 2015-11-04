@@ -4,15 +4,15 @@ USE owltosql;
 -- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_0059139');
 -- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_0059078');
 -- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_0058822');
--- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_9026326');
--- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_0000008');
--- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_0000007');
+-- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_9011048');
+-- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_9026262');
+-- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_9026260');
 -- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_9046416');
 -- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_0058702');
 -- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_9002086');
 -- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_9024152');
 -- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_9024151');
--- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_0000006');
+-- CALL sp_conceptspec('http://purl.obolibrary.org/obo/VTO_9026555');
 
 -- OMIM Ontology
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000106');
@@ -26,7 +26,7 @@ USE owltosql;
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000052');
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000224');
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU003422');
-CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000376');
+-- CALL sp_conceptspec('http://purl.bioontology.org/ontology/OMIM/MTHU000376');
 
 -- SNMI Ontology
 -- CALL sp_conceptspec('http://purl.bioontology.org/ontology/SNMI/A-13000');

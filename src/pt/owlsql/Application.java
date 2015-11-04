@@ -685,7 +685,7 @@ public final class Application {
 	}
     public static void main(String[] args) {
         processArguments(args);
-/*        
+        
         try {
             Report report = verifyDatabase();
             if (!report.canProceed)
@@ -694,7 +694,7 @@ public final class Application {
         catch (SQLException e) {
             exit("Error on database connection", e);
         }
-*/        
+        
         // We load the ontologies into memory
         try {
             Config.loadOntologies();
@@ -702,7 +702,7 @@ public final class Application {
         catch (IOException e) {
             exit("Error on loading the ontologies", e);	
         }
-/*        
+        
         try {
             prepareExtractors();
         }
@@ -752,7 +752,7 @@ public final class Application {
         }
         
         // At this point, no more error need to be handled, so remove the handler
-        Runtime.getRuntime().removeShutdownHook(errorHandler);*/
+        Runtime.getRuntime().removeShutdownHook(errorHandler);
     }
     
     

@@ -1,4 +1,4 @@
-Order;OWL URI;Download Time (ms);Axiom Count
+Index;OWL URI;Download Time (ms);Axiom Count
 1;http://data.bioontology.org/ontologies/ICO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;5904;4607
 2;http://data.bioontology.org/ontologies/TMO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;2152;1152
 3;http://data.bioontology.org/ontologies/HEIO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85;23325;16629
