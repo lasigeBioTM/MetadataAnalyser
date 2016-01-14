@@ -568,6 +568,18 @@ public final class Application {
         }
     }
     
+    /**
+     * 
+     * @throws SQLException If droping the database fails
+     */
+    private static void dropDatabase() throws SQLException {
+    	String database = Config.getDatabase();
+    	try (Connection connection = Config.connectToSQLServer()) {
+    		try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate("DROP DATABASE " + database);
+            }
+    	}
+    }
     
     /**
      * @throws SQLException If creating the database fails
@@ -683,6 +695,11 @@ public final class Application {
 		//
 		return result.toString();
 	}
+	
+	/**
+	 * 
+	 * @param args
+	 */
     public static void main(String[] args) {
         processArguments(args);
         

@@ -1,4 +1,4 @@
-package pt.ma.logger;
+package pt.ma.log;
 
 import java.util.logging.Formatter;
 import java.util.logging.Handler;

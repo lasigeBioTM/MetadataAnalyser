@@ -1,4 +1,4 @@
-package pt.ma.downloader.object;
+package pt.ma.owl.object;
 
 import java.io.BufferedReader;
 import java.io.IOException;

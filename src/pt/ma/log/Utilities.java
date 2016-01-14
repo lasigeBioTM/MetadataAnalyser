@@ -1,4 +1,4 @@
-package pt.ma.logger;
+package pt.ma.log;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;

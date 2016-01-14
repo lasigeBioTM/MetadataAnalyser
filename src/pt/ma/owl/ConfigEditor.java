@@ -1,4 +1,4 @@
-package pt.ma.downloader;
+package pt.ma.owl;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

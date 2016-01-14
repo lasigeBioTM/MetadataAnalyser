@@ -1,9 +1,9 @@
-package pt.ma.downloader;
+package pt.ma.owl;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import pt.ma.downloader.object.BioontologyDownloader;
+import pt.ma.owl.object.BioontologyDownloader;
 
 /**
  * 

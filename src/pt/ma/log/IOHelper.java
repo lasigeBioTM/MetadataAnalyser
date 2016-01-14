@@ -1,4 +1,4 @@
-package pt.ma.downloader.logging;
+package pt.ma.log;
 
 import java.io.Closeable;
 

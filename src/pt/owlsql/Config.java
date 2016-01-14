@@ -32,7 +32,7 @@ import com.google.gson.JsonParser;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import pt.json.JSONException;
-import pt.ma.downloader.object.BioontologyDownloader;
+import pt.ma.owl.object.BioontologyDownloader;
 import pt.owlsql.extractors.SQLCoreUtils;
 
 
