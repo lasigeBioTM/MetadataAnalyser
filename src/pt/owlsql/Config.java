@@ -663,17 +663,24 @@ public final class Config {
 	            String entry = uri + "#" + duration + "#"  + e.getMessage();
 	            owlNotLoaded.writeNext(entry.split("#"));
 	            
+	            System.out.println(e);
+	            
 			} catch (OwlSqlException e) {
 				// log a unsucessfull ontologie entry
 	            duration = System.currentTimeMillis() - startPoint;
 	            String entry = uri + "#" + duration + "#" + e.getMessage();
 	            owlNotLoaded.writeNext(entry.split("#"));
 				
+	            System.out.println(e);
+	            
 			} catch (Exception e) {
 				// log a unsucessfull ontologie entry
 	            duration = System.currentTimeMillis() - startPoint;
 	            String entry = uri + "#" + duration + "#" + e.getMessage();
-	            owlNotLoaded.writeNext(entry.split("#"));			
+	            owlNotLoaded.writeNext(entry.split("#"));
+	            
+	            System.out.println(e);
+	            
 			}
         }
         

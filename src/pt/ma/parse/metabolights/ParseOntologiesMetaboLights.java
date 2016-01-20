@@ -6,8 +6,10 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pt.ma.parse.Ontology;
+import pt.ma.metadata.MetaOntology;
 import pt.ma.parse.interfaces.IMetaOntologies;
+import pt.ma.util.FileWork;
+import pt.ma.util.StringWork;
 
 /**
  * 
@@ -29,17 +31,20 @@ public class ParseOntologiesMetaboLights implements IMetaOntologies {
 		this.metafile = metafile;
 	}
 	
+	/**
+	 * 
+	 */
 	@Override
-	public List<Ontology> getMetaOntologies() {
-		List<Ontology> ontologies = new ArrayList<Ontology>();
+	public List<MetaOntology> getMetaOntologies() {
+		List<MetaOntology> ontologies = new ArrayList<MetaOntology>();
 
 		// set regular expression to compile
+		Matcher matcher = null;
 		String regex = "^Term Source File\\t*\"http\\:\\/\\/[a-zA-Z0-9\\-\\.]+\\S+\"";
 		Pattern pattern = Pattern.compile(regex);
 		
 		//
-		Matcher matcher = null;
-		boolean itemFound = false;
+		boolean itemFound = false; int ontoCounter = 0;
 		String source = new String(metafile);
 		Scanner scanner = new Scanner(source);
 		while(scanner.hasNext() && !itemFound) {
@@ -47,6 +52,7 @@ public class ParseOntologiesMetaboLights implements IMetaOntologies {
 			String line = scanner.nextLine();
 			matcher = pattern.matcher(line);
 			if (matcher.find()) {
+				
 				//
 				regex = "\"(http\\:\\/\\/[a-zA-Z0-9\\-\\.]+\\S+)\"";
 				pattern = Pattern.compile(regex);
@@ -55,10 +61,12 @@ public class ParseOntologiesMetaboLights implements IMetaOntologies {
 					for(int i = 0; i < matcher.groupCount(); i++) {
 						try {
 							// an ontology have matched
-							String uri = matcher.group(i).trim();
-							if (uri.length() > 0) {
-								Ontology ontology = new Ontology(uri);
+							String ontoURI = StringWork.sanitaze(matcher.group(i).trim());
+							if (ontoURI.length() > 0) {
+								String ontoID = "ONTO_" + String.valueOf(ontoCounter); 
+								MetaOntology ontology = new MetaOntology(ontoID, ontoURI);
 								ontologies.add(ontology);
+								ontoCounter++;
 							}
 
 						} catch (Exception e) {
@@ -70,7 +78,8 @@ public class ParseOntologiesMetaboLights implements IMetaOntologies {
 				
 			}
 		}
-				
+		scanner.close();
+		//
 		return ontologies;
 	}
 

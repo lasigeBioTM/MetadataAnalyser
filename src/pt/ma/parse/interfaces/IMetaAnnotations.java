@@ -2,20 +2,22 @@ package pt.ma.parse.interfaces;
 
 import java.util.List;
 
-import pt.ma.parse.MetaClass;
+import pt.ma.metadata.MetaAnnotation;
+import pt.ma.metadata.MetaClass;
 
 /**
  * 
  * @author 
  *
  */
-public interface IMetaClasses {
+public interface IMetaAnnotations {
 
 	/**
 	 * 
+	 * @param metaClass
 	 * @return
 	 */
-	public List<MetaClass> getMetaClasses();
+	public List<MetaAnnotation> getMetaAnnotations(MetaClass metaClass);
 	
 	/**
 	 * 

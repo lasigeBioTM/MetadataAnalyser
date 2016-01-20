@@ -2,7 +2,7 @@ package pt.ma.parse.interfaces;
 
 import java.util.List;
 
-import pt.ma.parse.Ontology;
+import pt.ma.metadata.MetaOntology;
 
 /**
  * 
@@ -15,7 +15,7 @@ public interface IMetaOntologies {
 	 * 
 	 * @return
 	 */
-	public List<Ontology> getMetaOntologies();
+	public List<MetaOntology> getMetaOntologies();
 
 	/**
 	 * 

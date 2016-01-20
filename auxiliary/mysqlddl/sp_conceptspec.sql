@@ -1,9 +1,9 @@
 CREATE DEFINER = `owltosql` @`%`
-PROCEDURE `sp_conceptspec`(IN concept_iri VARCHAR(100))
+PROCEDURE `sp_conceptspec`(IN concept_iri VARCHAR(100), OUT spec_value NUMERIC(6, 4))
    READS SQL DATA
 BEGIN
    /**/
-   DECLARE spec_value                         NUMERIC(6, 4);
+   -- DECLARE spec_value                         NUMERIC(6, 4);
    DECLARE start_time, end_time               BIGINT;
    -- DECLARE aux         VARCHAR(200);
    --
@@ -124,14 +124,14 @@ BEGIN
                -- something went wrong in delta calculus
                SET spec_value = 0;
 
-               SELECT spec_value;
+               -- SELECT spec_value;
             END IF;
 
             --
             SET end_time = UNIX_TIMESTAMP();
 
             -- SELECT aux;
-            SELECT concept_ancestors_count,
+            /* SELECT concept_ancestors_count,
                    loop_cntr AS 'leaf_descendents_sum',
                    leaft_concept_delta_sum,
                    loop_cntr,
@@ -139,25 +139,25 @@ BEGIN
                    (leaft_concept_delta_sum / loop_cntr),
                    start_time,
                    end_time,
-                   end_time - start_time;
+                   end_time - start_time; */
          ELSE
             CLOSE leaf_descendents_cursor;
 
             -- this is a leaf concept, set the highest spec value
             SET spec_value = 1;
 
-            SELECT spec_value;
+            -- SELECT spec_value;
          END IF;
       ELSE
          -- this is a top concept in the ontology hierarchy
          SET spec_value = 0;
 
-         SELECT spec_value;
+         -- SELECT spec_value;
       END IF;
    ELSE
       -- this is not a valid concept, set the least spec value
-      SET spec_value = 0;
+      SET spec_value = -1;
 
-      SELECT spec_value;
+      -- SELECT spec_value;
    END IF;
 END

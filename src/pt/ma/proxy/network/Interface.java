@@ -21,24 +21,27 @@ public class Interface extends Observable {
 	/**
 	 * 
 	 */
-	private int tcpPort;
+	private int sourceTCPPort;
 	
 	/**
 	 * 
 	 */
 	private boolean verbose;
-	
+
 	/**
 	 * 
+	 * @param observer
+	 * @param sourceTCPPort
+	 * @param verbose
 	 */
 	public Interface(
 			Observer observer, 
-			int tcpPort, 
+			int sourceTCPPort, 
 			boolean verbose) {
 		super();
 		
 		// Establish class properties 
-		this.tcpPort = tcpPort;
+		this.sourceTCPPort = sourceTCPPort;
 		this.verbose = verbose;
 		
 		// Add a new class observer
@@ -50,7 +53,8 @@ public class Interface extends Observable {
 		}
 		
 		// start listening to incoming messages
-		new Thread(new InputMessagingThread(this.tcpPort)).start();
+		new Thread(
+				new InputMessagingThread(sourceTCPPort)).start();
 		
 	}
 	
@@ -70,11 +74,9 @@ public class Interface extends Observable {
 		
 		// send the message
 		try {
+			// set source tcp port
 			new Thread(
-					new OutputMessagingThread( 
-							message,
-							tcpPort)
-					).start();
+					new OutputMessagingThread(message)).start();
 			
 		} catch (UnknownHostException e) {
 			// TODO: logging action
@@ -120,32 +122,32 @@ public class Interface extends Observable {
 		/**
 		 * 
 		 */
-		private InetAddress destination;
+		private InetAddress destinationIP;
 		
 		/**
 		 * 
 		 */
-		private int tcpPort;
+		private int destinationPort;
 		 
 		
 		/**
 		 * 
 		 */
 		private Message message;
-		
+
 		/**
-		 * @throws UnknownHostException 
 		 * 
+		 * @param message
+		 * @throws UnknownHostException
 		 */
-		public OutputMessagingThread ( 
-				Message message,
-				int tcpPort) throws UnknownHostException {
+		public OutputMessagingThread (Message message) 
+				throws UnknownHostException {
 			super();
 			
 			// Establish class properties
-			this.destination = InetAddress.getByName(message.getReceiverAddress());
+			this.destinationIP = InetAddress.getByName(message.getReceiverTCPIP());
+			this.destinationPort = message.getReceiverTCPPort();
 			this.message = message;
-			this.tcpPort = tcpPort;
 			
 			//
 			if (verbose) {
@@ -161,11 +163,13 @@ public class Interface extends Observable {
 				// log action
 				if (verbose) {
 					System.out.println("[Network,ClientThread :Info] SEND procedure, about to open "+
-							"server connection: "+destination+":" + this.tcpPort);
+							"server connection: " + destinationIP + ":" + destinationPort);
 				}
 				
 				// open the client socket connection
-				socket = new Socket(destination, this.tcpPort);
+				socket = new Socket(
+						destinationIP, 
+						destinationPort);
 				outputStream = new ObjectOutputStream(socket.getOutputStream());
 				
 				// log action
@@ -175,7 +179,8 @@ public class Interface extends Observable {
 				}
 				
 				// set sender message identifier
-				message.setSenderAddress(socket.getInetAddress().getHostAddress());
+				message.setSenderTCPIP(socket.getInetAddress().getHostAddress());
+				message.setSenderTCPPort(sourceTCPPort);
 				
 				// send the message to destination
 				outputStream.writeObject(message);

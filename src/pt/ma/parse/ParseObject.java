@@ -1,7 +1,10 @@
 package pt.ma.parse;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -14,14 +17,20 @@ import pt.blackboard.DSL;
 import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
+import pt.blackboard.protocol.AnnotationsOutgoing;
 import pt.blackboard.protocol.MessageProtocol;
-import pt.blackboard.protocol.ConceptsOutgoing;
 import pt.blackboard.protocol.ParseDelegateOutgoing;
 import pt.blackboard.protocol.ParseReadyOutgoing;
 import pt.blackboard.protocol.ProxyDelegateOutgoing;
 import pt.blackboard.protocol.TermsOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
 import pt.blackboard.protocol.enums.RequestType;
+import pt.ma.exception.InactiveJobException;
+import pt.ma.metadata.MetaAnnotation;
+import pt.ma.metadata.MetaClass;
+import pt.ma.metadata.MetaData;
+import pt.ma.metadata.MetaTerm;
+import pt.ma.metadata.MetaObjective;
 import pt.ma.parse.interfaces.IMetaHeader;
 import pt.ma.parse.interfaces.IMetaOntologies;
 import pt.ma.parse.metabolights.ParseHeaderMetaboLights;
@@ -37,6 +46,11 @@ public class ParseObject extends DSL {
 	/**
 	 * 
 	 */
+	private static final String[] CLASS_NAMES = {"Design", "Factor", "Assay", "Protocol"};
+	
+	/**
+	 * 
+	 */
 	private IBlackboard blackboard;
 	
 	/**
@@ -47,7 +61,7 @@ public class ParseObject extends DSL {
 	/**
 	 * 
 	 */
-	private Map<UUID, MetaData> metadataActiveJobs;
+	private Map<UUID, ParseJob> metadataActiveJobs;
 
 	/**
 	 * 
@@ -63,19 +77,19 @@ public class ParseObject extends DSL {
 			IBlackboard blackboard, 
 			boolean verbose) {
 		this.verbose = verbose;
-		
+
 		// assign blackboard instance
 		this.blackboard = blackboard;
 		
 		// start active parse jobs data structure
-		this.metadataActiveJobs = new HashMap<UUID, MetaData>();
-		
+		this.metadataActiveJobs = new HashMap<UUID, ParseJob>();
+
 		// set blackboard outgoing messages queue
 		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
 
 		// open threads for reading from blackboard
 		new Thread(new ParseBlackboardProxyRead(this.blackboard)).start();
-		new Thread(new ParseBlackboardConceptsRead(this.blackboard)).start();
+		new Thread(new ParseBlackboardAnnotationsRead(this.blackboard)).start();
 		new Thread(new ParseBlackboardTermsRead(this.blackboard)).start();
 
 		// open a thread to check job completeness
@@ -83,11 +97,9 @@ public class ParseObject extends DSL {
 				this.blackboard,
 				this.metadataActiveJobs,
 				this.blackboardOutgoingQueue)).start();
-		
+
 		// open a thread for writing to the blackboard
-		new Thread(new ParseBlackboardWrite(
-				this.blackboard, 
-				blackboardOutgoingQueue)).start();
+		new Thread(new ParseBlackboardWrite(blackboardOutgoingQueue)).start();
 		
 	}
 
@@ -103,8 +115,7 @@ public class ParseObject extends DSL {
 			ComponentList source) {
 
 		// parse protocol message
-		Gson gson = new Gson();
-		UUID jobUUID = null; MetaData jobActive = null; 
+		Gson gson = new Gson(); 
 		switch (source) {
 		
 			case PROXY:		
@@ -133,33 +144,37 @@ public class ParseObject extends DSL {
 				}
 				break;
 
-			case CONCEPTS:
-				// message sent from concepts component
-				ConceptsOutgoing protocolConcepts = gson.fromJson(
-						message, 
-						ConceptsOutgoing.class);
-				ArrayList<MetaClass> bodyConcepts = protocolConcepts.getBody();
-				
-				// retreive active job
-				jobUUID = protocolConcepts.getUniqueID();
-				jobActive = metadataActiveJobs.get(jobUUID);
-				
-				// add collected class concetps
-				jobActive.addMetaClasses(bodyConcepts);
+			case ANNOTATIONS:
+				try {
+					// message sent from concepts component
+					AnnotationsOutgoing protocolAnnotation = gson.fromJson(
+							message, 
+							AnnotationsOutgoing.class);
+					parseAnnotationResponse(
+							protocolAnnotation.getUniqueID(),
+							protocolAnnotation.getBody());
+					
+				} catch (InactiveJobException e) {
+					// TODO log action
+					
+				}				
 				break;
 				
 			case TERMS:
-				// message sent from concepts component
-				TermsOutgoing protocolTerms = gson.fromJson(message, TermsOutgoing.class);
-				ArrayList<MetaTerm> bodyTerms = protocolTerms.getBody();
-				
-				// retreive active job
-				jobUUID = protocolTerms.getUniqueID();
-				jobActive = metadataActiveJobs.get(jobUUID);
-				
-				// add collected class concetps
-				jobActive.addMetaTerms(bodyTerms);
+				try {
+					// message sent from concepts component
+					TermsOutgoing protocolTerm = gson.fromJson(
+							message, 
+							TermsOutgoing.class);
+					parseTermResponse(
+							protocolTerm.getUniqueID(),
+							protocolTerm.getBody());
+				} catch (InactiveJobException e) {
+					// TODO log action
+
+				}				
 				break;
+
 
 			default:
 				// TODO: something's wrong
@@ -178,10 +193,10 @@ public class ParseObject extends DSL {
 		Gson gson = new Gson(); String message = null;
 		switch (protocol.getComponentTarget()) {
 		
-			case CONCEPTS:
+			case ANNOTATIONS:
 				// blackboard message to concepts component
 				message = gson.toJson((ParseDelegateOutgoing)protocol);
-				blackboard.put(Tuple(TupleKey.CONCEPTSIN, message));				
+				blackboard.put(Tuple(TupleKey.ANNOTATIONSIN, message));				
 				break;
 				
 			case TERMS:
@@ -216,33 +231,155 @@ public class ParseObject extends DSL {
 		// parse metadata header
 		IMetaHeader parseHeader = new ParseHeaderMetaboLights(body);
 		MetaData metaData = new MetaData(
-				parseHeader.getStudyID(), 
-				ParseObjective.METADATAANALYSIS);
+				parseHeader.getStudyID(),
+				jobUUID,
+				CLASS_NAMES,
+				MetaObjective.METADATAANALYSIS);		
+		
+		try {
+			// define checksum property
+			metaData.setCheckSum(body);
+			
+		} catch (NoSuchAlgorithmException e) {
+			// TODO log action
 
+		}
+		
 		// set all metadata ontologies
 		IMetaOntologies parseOntologies = new ParseOntologiesMetaboLights(body);
-		metaData.addOntologies(parseOntologies.getMetaOntologies());
+		metaData.addOntologies(parseOntologies.getMetaOntologies());		
 		
 		// add to active jobs list
-		metadataActiveJobs.put(jobUUID, metaData);
-		
+		ParseJob parseJob = new ParseJob(jobUUID, metaData, 3);
+		metadataActiveJobs.put(jobUUID, parseJob);
+
 		// delegate class search job
 		ParseDelegateOutgoing classProtocol = new ParseDelegateOutgoing(
 				jobUUID,
+				metaData.getMetaClasses(),
 				body,
-				ComponentList.CONCEPTS,
+				ComponentList.ANNOTATIONS,
 				RequestType.METADATAANALYSIS);
 		blackboardOutgoingQueue.add(classProtocol);
 		
 		// delegate term search job
 		ParseDelegateOutgoing termProtocol = new ParseDelegateOutgoing(
 				jobUUID,
+				metaData.getMetaClasses(),
 				body,
 				ComponentList.TERMS,
 				RequestType.METADATAANALYSIS); 
 		blackboardOutgoingQueue.add(termProtocol);
 		
 		// TODO: Log Action
+		
+	}
+	
+	/**
+	 * 
+	 * @param jobUUID
+	 * @param metaClasses
+	 * @throws InactiveJobException for invalid job uuid 
+	 */
+	private void parseAnnotationResponse(
+			UUID jobUUID, 
+			List<MetaClass> responseBody) throws InactiveJobException {
+		
+		// retreive metadata instance from active job
+		if (!metadataActiveJobs.containsKey(jobUUID)) {
+			throw new InactiveJobException(
+					"ParseObject:parseAnnotationResponse - Invalid Job UUID: " 
+					+ jobUUID);
+		}
+		ParseJob jobActive = metadataActiveJobs.get(jobUUID);
+		MetaData metaData = jobActive.getMetaData();
+		
+		// TODO: log action
+		
+		// iterate trough all metadata classes and add the new annotations
+		for (MetaClass metaClass : metaData.getMetaClasses()) {
+			//
+			boolean classFound = false;
+			Iterator<MetaClass> respIterator = responseBody.iterator();
+			while(respIterator.hasNext() && !classFound) {
+				MetaClass respClass = respIterator.next();
+				if (metaClass.equals(respClass)) {
+//System.out.println("MetaClass: " + metaClass.getClassName() + "; RespClass: " + respClass.getClassName());					
+					//
+					metaClass.removeAllTerms();
+					for (MetaAnnotation respAnnotation : respClass.getMetaAnnotations()) {
+						// TODO: set any term remaining property
+//System.out.println(respAnnotation.get());
+						MetaAnnotation itemAnnotation = new MetaAnnotation(
+								respAnnotation.getId(), 
+								respAnnotation.getURI());
+						metaClass.addMetaAnnotation(itemAnnotation);			
+					}
+					//
+					classFound = true;
+				}
+			}
+		}
+		
+		// set active job status
+		jobActive.setParseStatus(3);
+		
+		// TODO: log action
+		
+	}
+	
+	/**
+	 * 
+	 * @param jobUUID
+	 * @param responseBody
+	 * @throws InactiveJobException for invalid job uuid
+	 */
+	private void parseTermResponse(
+			UUID jobUUID, 
+			List<MetaClass> responseBody) throws InactiveJobException {
+		
+		// retreive metadata instance from active job
+		if (!metadataActiveJobs.containsKey(jobUUID)) {
+			throw new InactiveJobException(
+					"ParseObject:parseTermResponse - Invalid Job UUID: " 
+					+ jobUUID);
+		}
+		ParseJob jobActive = metadataActiveJobs.get(jobUUID);
+		MetaData metaData = jobActive.getMetaData();
+		
+		// TODO: log action
+		
+		// iterate trough all metadata classes and add the new annotations
+		for (MetaClass metaClass : metaData.getMetaClasses()) {
+			//
+			boolean classFound = false;
+			Iterator<MetaClass> respIterator = responseBody.iterator();
+			while(respIterator.hasNext() && !classFound) {
+				MetaClass respClass = respIterator.next();
+				if (metaClass.equals(respClass)) {
+System.out.println("MetaClass: " + metaClass.getClassName() + "; RespClass: " + respClass.getClassName());					
+					//
+					metaClass.removeAllTerms();
+					for (MetaTerm respTerm : respClass.getMetaTerms()) {
+						// TODO: set any term remaining property
+System.out.println(respTerm.getName());
+						MetaTerm itemTerm = new MetaTerm(
+								respTerm.getId(), 
+								respTerm.getName());
+						metaClass.addMetaTerm(itemTerm);
+						
+					}
+					//
+					classFound = true;
+				}
+			}
+		}
+		
+		// set active job status
+		jobActive.setParseStatus(4);
+		
+		// TODO: log action
+		
 	}
 	
 	// PRIVATE CLASSES
@@ -302,7 +439,7 @@ public class ParseObject extends DSL {
 	 * 
 	 *
 	 */
-	private class ParseBlackboardConceptsRead extends DSL implements Runnable {
+	private class ParseBlackboardAnnotationsRead extends DSL implements Runnable {
 
 		/**
 		 * Locally managed blackboard instance
@@ -313,7 +450,7 @@ public class ParseObject extends DSL {
 		 * 
 		 * @param blackboard
 		 */
-		public ParseBlackboardConceptsRead(
+		public ParseBlackboardAnnotationsRead(
 				IBlackboard blackboard) {
 			this.blackboard = blackboard;
 			
@@ -329,7 +466,7 @@ public class ParseObject extends DSL {
 			while (!Thread.currentThread().isInterrupted()) {
 
 				// waits for a PROXYIN tuple
-				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.CONCEPTSOUT));
+				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.ANNOTATIONSOUT));
 				String protocol = tuple.getData().toArray()[1].toString();
 				
 				// TODO: Logging action
@@ -337,7 +474,7 @@ public class ParseObject extends DSL {
 				// prepare the new message to be sent
 				receiveBLBMessage(
 						protocol, 
-						ComponentList.CONCEPTS);
+						ComponentList.ANNOTATIONS);
 				
 			}
 			
@@ -385,7 +522,9 @@ public class ParseObject extends DSL {
 				// TODO: Logging action
 				
 				// prepare the new message to be sent
-				receiveBLBMessage(protocol, ComponentList.TERMS);
+				receiveBLBMessage(
+						protocol, 
+						ComponentList.TERMS);
 				
 			}
 			
@@ -403,11 +542,6 @@ public class ParseObject extends DSL {
 	private class ParseBlackboardWrite extends DSL implements Runnable {
 
 		/**
-		 * Locally managed blackboard instance
-		 */
-		private IBlackboard blackboard;
-
-		/**
 		 * 
 		 */
 		private Queue<MessageProtocol> outgoingQueue;
@@ -417,10 +551,8 @@ public class ParseObject extends DSL {
 		 * @param blackboard
 		 * @param outgoingQueue
 		 */
-		public ParseBlackboardWrite(
-				IBlackboard blackboard, 
+		public ParseBlackboardWrite( 
 				Queue<MessageProtocol> outgoingQueue) {
-			this.blackboard = blackboard;
 			this.outgoingQueue = outgoingQueue;
 			
 		}
@@ -473,7 +605,7 @@ public class ParseObject extends DSL {
 		/**
 		 * 
 		 */
-		private Map<UUID, MetaData> metadataActiveJobs;
+		private Map<UUID, ParseJob> metadataActiveJobs;
 		
 		/**
 		 * 
@@ -482,7 +614,7 @@ public class ParseObject extends DSL {
 		 */
 		public ParseProcessJobList(
 				IBlackboard blackboard, 
-				Map<UUID, MetaData> metadataActiveJobs,
+				Map<UUID, ParseJob> metadataActiveJobs,
 				Queue<MessageProtocol> outgoingQueue) {
 			
 			this.blackboard = blackboard;
@@ -499,28 +631,56 @@ public class ParseObject extends DSL {
 				
 				// check if there are any ready jobs
 				ArrayList<UUID> jobsToDelete = new ArrayList<UUID>();
-				for (Entry<UUID, MetaData> entry : metadataActiveJobs.entrySet()) {
-					MetaData activeJob = entry.getValue();
-					if (activeJob.isReady()) {
-						
-						// send a blackboard message to calculus component
-						ParseReadyOutgoing protocol = new ParseReadyOutgoing(
-								entry.getKey(), 
-								activeJob,
-								ComponentList.CALCULUS);
-						sendBLBMessage(protocol);
-						
-						// TODO: log action
-						
-						// add this job to deletion job list
-						jobsToDelete.add(entry.getKey());
-						
+				for (Entry<UUID, ParseJob> entry : metadataActiveJobs.entrySet()) {
+					//
+					MetaData metaData = null;
+					ParseJob activeJob = entry.getValue();
+					switch (activeJob.getParseStatus()) {
+						case 10:
+							// the parse job is complet, so send a blackboard message 
+							// to calculus component
+							metaData = activeJob.getMetaData();
+							ParseReadyOutgoing protocol = new ParseReadyOutgoing(
+									entry.getKey(), 
+									metaData,
+									ComponentList.CALCULUS);
+							sendBLBMessage(protocol);
+							
+							// add this job to deletion job list
+							jobsToDelete.add(entry.getKey());
+							
+							// TODO: log action
+							break;
+
+						case 6:
+							// TODO: annotations parse
+							break;
+							
+						case 3:
+							// TODO: ontologies parse
+							break;
+							
+						case 1:
+							// TODO: header parse
+							break;
+
+						case 0:
+							// TODO: 
+							break;
+
+						default:
+							// TODO: something's wrong
+							break;
+							
 					}
+					
 				}
 				
 				// delete all processed jobs
-				for (UUID entry : jobsToDelete) {
-					metadataActiveJobs.remove(entry);
+				if (jobsToDelete.size() > 0) {
+					for (UUID entry : jobsToDelete) {
+						metadataActiveJobs.remove(entry);
+					}					
 				}
 				
 				// TODO: log action

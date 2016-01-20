@@ -1,21 +1,22 @@
 package pt.blackboard.protocol;
 
+import java.util.List;
 import java.util.UUID;
 
 import pt.blackboard.protocol.enums.ComponentList;
-import pt.ma.metadata.MetaData;
+import pt.ma.metadata.MetaClass;
 
 /**
  * 
  * 
  *
  */
-public class ParseReadyOutgoing extends MessageProtocol {
+public class AnnotationsOutgoing extends MessageProtocol {
 
 	/**
 	 * 
 	 */
-	private MetaData body;
+	private List<MetaClass> body;
 	
 	/**
 	 * 
@@ -23,13 +24,13 @@ public class ParseReadyOutgoing extends MessageProtocol {
 	 * @param body
 	 * @param requestType
 	 */
-	public ParseReadyOutgoing(
+	public AnnotationsOutgoing(
 			UUID uniqueID, 
-			MetaData body, 
+			List<MetaClass> body, 
 			ComponentList target) {
 		super(uniqueID, target);
 		//
-		this.body = body;
+		this.body = body;	
 		
 	}
 
@@ -37,8 +38,9 @@ public class ParseReadyOutgoing extends MessageProtocol {
 	 * 
 	 * @return
 	 */
-	public MetaData getBody() {
-		return body;
+	public List<MetaClass> getBody() {
+		return this.body;
+		
 	}
-
+		
 }

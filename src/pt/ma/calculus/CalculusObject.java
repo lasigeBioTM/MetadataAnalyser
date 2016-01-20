@@ -3,6 +3,7 @@ package pt.ma.calculus;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -18,15 +19,17 @@ import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.CalculusDelegateOutgoing;
 import pt.blackboard.protocol.CalculusReadyOutgoing;
 import pt.blackboard.protocol.MessageProtocol;
-import pt.blackboard.protocol.OWLOutgoing;
+import pt.blackboard.protocol.OWLReadyOutgoing;
 import pt.blackboard.protocol.ParseReadyOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
-import pt.ma.parse.MetaClass;
-import pt.ma.parse.MetaData;
+import pt.ma.exception.InactiveJobException;
+import pt.ma.metadata.MetaAnnotation;
+import pt.ma.metadata.MetaClass;
+import pt.ma.metadata.MetaData;
 
 /**
  * 
- * @author Bruno
+ * 
  *
  */
 public class CalculusObject extends DSL {
@@ -44,7 +47,7 @@ public class CalculusObject extends DSL {
 	/**
 	 * 
 	 */
-	private Map<UUID, MetaData> metadataActiveJobs;
+	private Map<UUID, CalculusJob> metadataActiveJobs;
 
 	/**
 	 * 
@@ -65,7 +68,7 @@ public class CalculusObject extends DSL {
 		this.blackboard = blackboard;
 		
 		// start active parse jobs data structure
-		this.metadataActiveJobs = new HashMap<UUID, MetaData>();
+		this.metadataActiveJobs = new HashMap<UUID, CalculusJob>();
 		
 		// set blackboard outgoing messages queue
 		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
@@ -99,44 +102,39 @@ public class CalculusObject extends DSL {
 			ComponentList source) {
 
 		// parse protocol message
-		Gson gson = new Gson();
-		UUID jobUUID = null; MetaData jobActive = null; 
+		Gson gson = new Gson(); 
 		switch (source) {
 		
 			case PARSE:
-				// a new message from Parse component
-				ParseReadyOutgoing protocolParse = gson.fromJson(
-						message, 
-						ParseReadyOutgoing.class);
-				
-				// add request to active job list
-				jobActive = protocolParse.getBody();
-				jobUUID = protocolParse.getUniqueID();
-				metadataActiveJobs.put(jobUUID, jobActive);
-				
-				// ask OWL component for class specificity
-				for (MetaClass metaClass : jobActive.getMetaClasses()) {					
-					// delegate class search job
-					CalculusDelegateOutgoing classProtocol = new CalculusDelegateOutgoing(
-							jobUUID,
-							metaClass,
-							ComponentList.OWL);
-					blackboardOutgoingQueue.add(classProtocol);
+				try {
+					// a new message from Parse component
+					ParseReadyOutgoing protocolParse = gson.fromJson(
+							message, 
+							ParseReadyOutgoing.class);
+					parseParseRequest(
+							protocolParse.getUniqueID(),
+							protocolParse.getBody());
+					
+				} catch (InactiveJobException e) {
+					// TODO log action
 
 				}
-				
 				break;
 				
 			case OWL:
-				// a new message from OWL component				
-				OWLOutgoing protocolOWL = gson.fromJson(
-						message, 
-						OWLOutgoing.class);
-				
-				// collect the specificity value from OWL response
-				jobUUID = protocolOWL.getUniqueID();
-				MetaClass bodyOWL = protocolOWL.getBody();
-				setMetaClassSpecValues(jobUUID, bodyOWL);
+				try {
+					// a new message from OWL component				
+					OWLReadyOutgoing protocolOWL = gson.fromJson(
+							message, 
+							OWLReadyOutgoing.class);
+					parseOWLResponse(
+							protocolOWL.getUniqueID(), 
+							protocolOWL.getBody());
+					
+				} catch (InactiveJobException e) {
+					// TODO log action
+
+				}				
 				break;
 			
 			default:
@@ -184,36 +182,193 @@ public class CalculusObject extends DSL {
 	/**
 	 * 
 	 * @param jobUUID
-	 * @param metaClass
+	 * @param requestBody
+	 * @throws InactiveJobException 
 	 */
-	private void setMetaClassSpecValues(
+	private void parseParseRequest(
 			UUID jobUUID, 
-			MetaClass metaClass) {
+			MetaData requestBody) throws InactiveJobException {
 		
-		// get active job for uuid
-		MetaData jobActive = metadataActiveJobs.get(jobUUID);
+		// add to active jobs list
+		CalculusJob jobActive = new CalculusJob(jobUUID, requestBody);
+		metadataActiveJobs.put(jobUUID, jobActive);
+		
+		// TODO: log action
+		
+		// ask OWL component for each class annotations specificity
+		MetaData metaData = jobActive.getMetaData();
+		for (MetaClass metaClass : metaData.getMetaClasses()) {					
+
+			// set reference to this job class 
+			jobActive.setJobTask(metaClass);
+			
+			// delegate class search job
+			CalculusDelegateOutgoing classProtocol = new CalculusDelegateOutgoing(
+					jobUUID,
+					metaClass,
+					ComponentList.OWL);
+			blackboardOutgoingQueue.add(classProtocol);
+
+		}
+		
+		// TODO: log action
+
+	}
+	
+	/**
+	 * 
+	 * @param jobUUID
+	 * @param respClass
+	 * @throws InactiveJobException
+	 */
+	private void parseOWLResponse(
+			UUID jobUUID, 
+			MetaClass respClass) throws InactiveJobException {
+		
+		// retreive metadata instance from active job
+		if (!metadataActiveJobs.containsKey(jobUUID)) {
+			throw new InactiveJobException(
+					"CalculusObject:parseOWLResponse - Invalid Job UUID: " 
+					+ jobUUID);
+		}
+		CalculusJob jobActive = metadataActiveJobs.get(jobUUID);
+		
+		// TODO: log action
+		
+		// collect the specificity value from OWL response
+		MetaClass metaClass = setMetaClassAnnotationsSpecValues(
+				jobUUID, 
+				jobActive.getMetaData(), 
+				respClass);
+		
+		// set specificity average value for each class item in metadata
+		setMetaClassAvgSpecValue(
+				jobUUID, 
+				metaClass);
+		
+		// set coverage value for each class item in metadata
+		setMetaClassCovValue(
+				jobUUID, 
+				metaClass);
+		
+		// remove this class reference from job list
+		jobActive.completeJobTask(metaClass);
+		
+	}
+	
+	/**
+	 * @requires a valid uuid job
+	 * @param jobUUID
+	 * @param metaClass
+	 * 	 */
+	private MetaClass setMetaClassAnnotationsSpecValues(
+			UUID jobUUID,
+			MetaData metaData,
+			MetaClass respClass) {
+		MetaClass metaClass = null;
 		
 		// iterate through all meta classes and set the spec value
 		boolean classFound = false;
-		Iterator<MetaClass> classIterator = jobActive.getMetaClasses().iterator();
+		Iterator<MetaClass> classIterator = metaData.getMetaClasses().iterator();
 		while(classIterator.hasNext() && !classFound) {
 			MetaClass itemClass = classIterator.next();
 			
 			// is this the meta class we are searching for 
-			if (metaClass.equals(itemClass)) {
-				// set spec and cov values
-				itemClass.setSpecValue(itemClass.getSpecValue());
-				itemClass.setCovValue(itemClass.getCovValue());
+			if (respClass.equals(itemClass)) {
+				
+				// iterate trough all response annotations and set the new value
+				for (MetaAnnotation respAnnotation : respClass.getMetaAnnotations()) {
+					boolean annoFound = false;
+					Iterator<MetaAnnotation> annoIterator = itemClass.getMetaAnnotations().iterator();
+					while(annoIterator.hasNext() && !annoFound) {
+						MetaAnnotation itemAnno = annoIterator.next();
+						// is this the meta annotation we are searching for
+						if (respAnnotation.equals(itemAnno)) {
+							// set class annotation spec value
+							itemAnno.setSpecValue(respAnnotation.getSpecValue());
+							annoFound = true;
+						}
+					}
+				}
+				metaClass = itemClass;
 				classFound = true;
 				
 				// TODO: log action
 				
 			}
+			
 		}
 		
-		
+		//
+		return metaClass;
 	}
 	
+	/**
+	 * 
+	 * @param jobUUID
+	 * @param metaData
+	 */
+	private void setMetaClassAvgSpecValue(
+			UUID jobUUID,
+			MetaClass metaClass) {
+					
+		// iterate trough all meta class annotations
+		double avgClassSpec = 0f;
+		List<MetaAnnotation> offsetAnnotations = new ArrayList<MetaAnnotation>();
+		for (MetaAnnotation metaAnnotation : metaClass.getMetaAnnotations()) {
+			double specValue = metaAnnotation.getSpecValue();
+			if (specValue >= 0) {
+				// increment global class specification value
+				avgClassSpec += specValue;
+				
+			} else {
+				// no value was found for this annotation, so this one will not 
+				// be considered for class specificity calculation
+				offsetAnnotations.add(metaAnnotation);
+
+				// TODO: log action
+				
+			}
+		}
+		
+		// set denominator specificity value
+		int specDenominator = (metaClass.getMetaAnnotations().size() - offsetAnnotations.size());
+		
+		// calculate average specificity value for this class
+		if (avgClassSpec > 0 && specDenominator > 0) {
+			avgClassSpec = (double)(
+					Double.valueOf(avgClassSpec) / 
+					Double.valueOf(specDenominator));
+			
+		} else {
+			avgClassSpec = 0f;
+			
+		}
+		metaClass.setSpecValue(avgClassSpec);
+		
+		// TODO: log action
+		
+	}
+
+	/**
+	 * 
+	 * @param jobUUID
+	 * @param metaData
+	 */
+	private void setMetaClassCovValue(
+			UUID jobUUID,
+			MetaClass metaClass) {
+					
+		// calculate average specificity value for this class
+		double avgCovValue = (double)
+			   (Double.valueOf(metaClass.getMetaAnnotations().size()) / 
+					   Double.valueOf(metaClass.getMetaTerms().size()));
+		metaClass.setCovValue(avgCovValue);			
+		
+		// TODO: log action
+		
+	}
+
 	// PRIVATE CLASSES
 	
 	/**
@@ -334,7 +489,7 @@ public class CalculusObject extends DSL {
 		/**
 		 * 
 		 */
-		private Map<UUID, MetaData> metadataActiveJobs;
+		private Map<UUID, CalculusJob> metadataActiveJobs;
 		
 		/**
 		 * 
@@ -343,7 +498,7 @@ public class CalculusObject extends DSL {
 		 */
 		public ParseProcessJobList(
 				IBlackboard blackboard, 
-				Map<UUID, MetaData> metadataActiveJobs,
+				Map<UUID, CalculusJob> metadataActiveJobs,
 				Queue<MessageProtocol> outgoingQueue) {
 			
 			this.blackboard = blackboard;
@@ -360,15 +515,23 @@ public class CalculusObject extends DSL {
 				
 				// check if there are any ready jobs
 				ArrayList<UUID> jobsToDelete = new ArrayList<UUID>();
-				for (Entry<UUID, MetaData> entry : metadataActiveJobs.entrySet()) {
-					MetaData activeJob = entry.getValue();
-					if (activeJob.isReady()) {
+				for (Entry<UUID, CalculusJob> entry : metadataActiveJobs.entrySet()) {
+					
+					CalculusJob activeJob = entry.getValue();
+					if (activeJob.isTaskListComplete() ) {
+						
+						// get all meta data file information gathered
+						MetaData metaData = activeJob.getMetaData();
+System.out.println(metaData);
+						
+						// TODO: log action
+						
 						
 						// send a blackboard message to calculus component
-						ParseReadyOutgoing protocol = new ParseReadyOutgoing(
+						CalculusReadyOutgoing protocol = new CalculusReadyOutgoing(
 								entry.getKey(), 
-								activeJob,
-								ComponentList.CALCULUS);
+								metaData,
+								ComponentList.PROXY);
 						sendBLBMessage(protocol);
 						
 						// TODO: log action
@@ -377,6 +540,7 @@ public class CalculusObject extends DSL {
 						jobsToDelete.add(entry.getKey());
 						
 					}
+					
 				}
 				
 				// delete all processed jobs
@@ -456,5 +620,6 @@ public class CalculusObject extends DSL {
 		}
 
 	}
+	
 	
 }

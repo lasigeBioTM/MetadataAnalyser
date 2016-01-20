@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import pt.blackboard.protocol.enums.ComponentList;
-import pt.ma.parse.MetaClass;
+import pt.ma.metadata.MetaClass;
 
 /**
  * 

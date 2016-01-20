@@ -1,5 +1,6 @@
-package pt.ma.terms;
+package pt.ma.term;
 
+import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -10,17 +11,23 @@ import pt.blackboard.DSL;
 import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
+import pt.blackboard.protocol.AnnotationsOutgoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.ParseDelegateOutgoing;
+import pt.blackboard.protocol.TermsOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
-import pt.ma.parse.MetaData;
+import pt.ma.metadata.MetaClass;
+import pt.ma.metadata.MetaData;
+import pt.ma.metadata.MetaTerm;
+import pt.ma.parse.interfaces.IMetaTerms;
+import pt.ma.parse.metabolights.ParseTermsMetaboLights;
 
 /**
  * 
  * 
  *
  */
-public class TermsObject extends DSL {
+public class TermObject extends DSL {
 	
 	/**
 	 * 
@@ -42,7 +49,7 @@ public class TermsObject extends DSL {
 	 * @param blackboard
 	 * @param verbose
 	 */
-	public TermsObject(
+	public TermObject(
 			IBlackboard blackboard, 
 			boolean verbose) {
 		this.verbose = verbose;
@@ -84,6 +91,7 @@ public class TermsObject extends DSL {
 				ParseDelegateOutgoing protocolProxy = gson.fromJson(
 						message, 
 						ParseDelegateOutgoing.class);
+				List<MetaClass> bodyClasses = protocolProxy.getMetaClasses();
 				byte[] bodyParse = protocolProxy.getBody();
 				switch (protocolProxy.getRequestType()) {
 				
@@ -94,7 +102,8 @@ public class TermsObject extends DSL {
 					case METADATAANALYSIS:
 						// an hole metadata file analysis 
 						parseMetadataFile(
-								protocolProxy.getUniqueID(), 
+								protocolProxy.getUniqueID(),
+								bodyClasses,
 								bodyParse);
 						break;
 						
@@ -119,7 +128,33 @@ public class TermsObject extends DSL {
 	 */
 	private void parseMetadataFile(
 			UUID jobUUID, 
+			List<MetaClass> metaClasses,
 			byte[] body) {
+		
+		// TODO: Averiguar a hipóstese de saber que parser utilizar
+		
+		// parse terms for each meta class given
+		IMetaTerms parseTerms = new ParseTermsMetaboLights(body);
+		for (MetaClass metaClass: metaClasses) {
+
+			// read all available terms for this meta class			
+			List<MetaTerm> terms = parseTerms.getMetaTerms(metaClass);
+			
+			// add all read new annotations to the meta class
+			metaClass.removeAllTerms();
+			for (MetaTerm term : terms) {
+				metaClass.addMetaTerm(term);	
+			}
+			
+		}
+		
+		// send a blackboard message to parse component with the results
+		TermsOutgoing protocol = new TermsOutgoing(
+				jobUUID,
+				metaClasses,
+				ComponentList.PARSE);
+		blackboardOutgoingQueue.add(protocol);
+		
 		
 	}
 
@@ -129,7 +164,21 @@ public class TermsObject extends DSL {
 	 */
 	private void sendBLBMessage(MessageProtocol protocol) {
 		
+		// send outgoing protocol message to the blackboard
+		Gson gson = new Gson(); String message = null;
+		switch (protocol.getComponentTarget()) {
 		
+			case PARSE:
+				// blackboard message to parse component
+				message = gson.toJson((TermsOutgoing)protocol);
+				blackboard.put(Tuple(TupleKey.TERMSOUT, message));				
+				break;
+				
+			default:
+				// TODO: log action
+				break;
+		}
+
 	}
 
 	// PRIVATE CLASSES

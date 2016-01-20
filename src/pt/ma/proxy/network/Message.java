@@ -21,11 +21,17 @@ public class Message implements Serializable {
     private static UUID uuid;
     
     /**
-     * Sender and receiver node TCP IP addresses
+     * 
      */
-    private String senderAddress; 					// node ip address that sends this message
-    private String receiverAddress; 				// node ip address that receives this message
-
+    private String senderTCPIP; 					
+    private int senderTCPPort;
+    
+    /**
+     * 
+     */
+    private String receiverTCPIP; 					
+    private int receiverTCPPort;
+ 				
     /**
      * 
      */
@@ -50,12 +56,14 @@ public class Message implements Serializable {
      * @param body
      */
     public Message( 
-    		String receiverAddress, 
+    		String receiverTCPIP, 
+    		int receiverTCPPort,
     		MessageType type, 
     		byte[] body) {
     	
     	//
-    	this.receiverAddress = receiverAddress;
+    	this.receiverTCPIP = receiverTCPIP;
+    	this.receiverTCPPort = receiverTCPPort;
     	this.type = type;
     	this.body = body;
     	
@@ -67,10 +75,50 @@ public class Message implements Serializable {
 
     /**
      * 
-     * @param senderAddress
+     * @param senderTCPIP
      */
-    public void setSenderAddress(String senderAddress) {
-		this.senderAddress = senderAddress;
+    public void setSenderTCPIP(String senderTCPIP) {
+		this.senderTCPIP = senderTCPIP;
+	}
+
+    /**
+     * 
+     * @param senderTCPPort
+     */
+    public void setSenderTCPPort(int senderTCPPort) {
+		this.senderTCPPort = senderTCPPort;
+	}
+
+    /**
+     * 
+     * @return
+     */
+	public String getReceiverTCPIP() {
+		return receiverTCPIP;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public int getReceiverTCPPort() {
+		return receiverTCPPort;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getSenderTCPIP() {
+		return senderTCPIP;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public int getSenderTCPPort() {
+		return senderTCPPort;
 	}
 
 	/**
@@ -79,22 +127,6 @@ public class Message implements Serializable {
      */
 	public UUID getUUID() {
 		return uuid;
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	public String getSenderAddress() {
-		return senderAddress;
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	public String getReceiverAddress() {
-		return receiverAddress;
 	}
 
 	/**

@@ -3,8 +3,8 @@ package pt.blackboard.protocol;
 import java.util.UUID;
 
 import pt.blackboard.protocol.enums.ComponentList;
-import pt.ma.parse.MetaClass;
-import pt.ma.parse.MetaData;
+import pt.ma.metadata.MetaClass;
+import pt.ma.metadata.MetaData;
 
 /**
  * 

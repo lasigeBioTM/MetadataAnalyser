@@ -14,17 +14,17 @@ public abstract class MessageProtocol {
 	/**
 	 * 
 	 */
-	private long timestamp;
+	protected long timestamp;
 	
 	/**
 	 * 
 	 */
-	private UUID uniqueID;
+	protected UUID uniqueID;
 
 	/**
 	 * 
 	 */
-	private ComponentList target;
+	protected ComponentList target;
 	
 	/**
 	 * 

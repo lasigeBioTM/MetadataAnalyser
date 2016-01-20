@@ -24,21 +24,13 @@ public class LogObject extends DSL {
 	
 	/**
 	 * 
-	 */
-	private Queue<MessageProtocol> blackboardOutgoingQueue;
-
-	/**
-	 * 
 	 * @param blackboard
 	 */
 	public LogObject(IBlackboard blackboard) {
 		
 		// assign blackboard instance
 		this.blackboard = blackboard;
-				
-		// set blackboard outgoing messages queue
-		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
-
+		
 		// open threads for reading from blackboard
 		new Thread(new ParseBlackboardAllRead(this.blackboard)).start();
 				
@@ -53,6 +45,7 @@ public class LogObject extends DSL {
 	 */
 	private void receiveBLBMessage(String message) {
 
+		
 	}
 	// PRIVATE CLASSES
 	

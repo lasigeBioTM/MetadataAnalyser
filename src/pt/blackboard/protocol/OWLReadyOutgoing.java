@@ -4,24 +4,19 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import pt.blackboard.protocol.enums.ComponentList;
-import pt.ma.parse.MetaClass;
+import pt.ma.metadata.MetaClass;
 
 /**
  * 
  * 
  *
  */
-public class OWLOutgoing extends MessageProtocol {
+public class OWLReadyOutgoing extends MessageProtocol {
 
 	/**
 	 * 
 	 */
 	private MetaClass body;
-
-	/**
-	 * 
-	 */
-	private ComponentList target;
 	
 	/**
 	 * 
@@ -29,14 +24,13 @@ public class OWLOutgoing extends MessageProtocol {
 	 * @param body
 	 * @param requestType
 	 */
-	public OWLOutgoing(
+	public OWLReadyOutgoing(
 			UUID uniqueID, 
 			MetaClass body, 
 			ComponentList target) {
 		super(uniqueID, target);
 		//
-		this.body = body;
-		this.target = target;	
+		this.body = body;	
 		
 	}
 
@@ -48,12 +42,5 @@ public class OWLOutgoing extends MessageProtocol {
 		return body;
 	}
 	
-	/**
-	 * 
-	 * @return
-	 */
-	public ComponentList getComponentList() {
-		return target;
-	}
 	
 }

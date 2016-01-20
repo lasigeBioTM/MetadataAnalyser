@@ -23,6 +23,11 @@
 			}
 		],
 	ontologies : [
-		"http://data.bioontology.org/ontologies/EFO/download?apikey=c96ea8d0-efe1-48bb-b123-bad6404dce85"
+		"http://192.168.86.144/ontologies/onto_efo.owl",
+		"http://192.168.86.144/ontologies/onto_bto",
+		"http://192.168.86.144/ontologies/onto_chmo.owl",
+		"http://192.168.86.144/ontologies/onto_ms.obo",
+		"http://192.168.86.144/ontologies/onto_obi.owl",
+		"http://192.168.86.144/ontologies/onto_uo.obo"
 	]
 }

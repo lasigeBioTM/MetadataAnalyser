@@ -1,11 +1,11 @@
-package pt.ma.parse;
+package pt.ma.metadata;
 
 /**
  * 
  * 
  *
  */
-public enum ParseObjective {
+public enum MetaObjective {
 	CONCEPTANALYSIS,
 	METADATAANALYSIS;
 

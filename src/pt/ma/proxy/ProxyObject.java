@@ -16,7 +16,6 @@ import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.CalculusReadyOutgoing;
 import pt.blackboard.protocol.MessageProtocol;
-import pt.blackboard.protocol.ParseDelegateOutgoing;
 import pt.blackboard.protocol.ProxyDelegateOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
 import pt.blackboard.protocol.enums.RequestType;
@@ -143,7 +142,8 @@ public class ProxyObject extends DSL implements Observer {
 		ProxyMapObject mapObject = new ProxyMapObject(
 				message.getUUID(), 
 				message.getTimestamp(), 
-				message.getSenderAddress(), 
+				message.getSenderTCPIP(), 
+				message.getSenderTCPPort(),
 				System.currentTimeMillis());
 		tpcReceivedMessagesMap.put(requestUUID, mapObject);
 		
@@ -204,16 +204,17 @@ public class ProxyObject extends DSL implements Observer {
 				ProxyMapObject mapObject = tpcReceivedMessagesMap.get(msgUUID);
 
 				// prepare the output message to be sent to original unique id
-				
+System.out.println(protocolCalculus.getBody());				
+				String jsonBody = gson.toJson(protocolCalculus.getBody());
+				byte[] respbody = jsonBody.getBytes();
 				
 				// build and send a new tcp message
-				byte[] body = message.getBytes();
 				Message tcpMessage = new Message( 
-						mapObject.getSenderAddress() , 
+						mapObject.getSenderTCPIP(),
+						mapObject.getSenderTCPPort(),
 						MessageType.TCPRESPONSE, 
-						body);
+						respbody);
 				network.sendMessage(tcpMessage);
-				
 				break;
 				
 			default:
@@ -350,7 +351,12 @@ public class ProxyObject extends DSL implements Observer {
 		/**
 		 * 
 		 */
-		private String senderAddress;
+		private String senderTCPIP;
+		
+		/**
+		 * 
+		 */
+		private int senderTCPPort;
 		
 		/**
 		 * 
@@ -372,12 +378,14 @@ public class ProxyObject extends DSL implements Observer {
 		public ProxyMapObject(
 				UUID requestUUID,
 				long sentTimestamp,
-				String senderAddress, 
+				String senderTCPIP,
+				int senderTCPPort,
 				long receivedTimestamp) {
 			super();
 			this.requestUUID = requestUUID;
 			this.sentTimestamp = sentTimestamp;
-			this.senderAddress = senderAddress;
+			this.senderTCPIP = senderTCPIP;
+			this.senderTCPPort = senderTCPPort;
 			this.receivedTimestamp = receivedTimestamp;
 		}
 
@@ -393,8 +401,16 @@ public class ProxyObject extends DSL implements Observer {
 		 * 
 		 * @return
 		 */
-		public String getSenderAddress() {
-			return senderAddress;
+		public String getSenderTCPIP() {
+			return senderTCPIP;
+		}
+
+		/**
+		 * 
+		 * @return
+		 */
+		public int getSenderTCPPort() {
+			return senderTCPPort;
 		}
 
 		/**

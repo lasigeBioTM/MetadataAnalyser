@@ -3,7 +3,7 @@ package pt.blackboard.protocol.enums;
 public enum ComponentList {
 	PROXY,
 	PARSE,
-	CONCEPTS,
+	ANNOTATIONS,
 	TERMS,
 	LOG,
 	CALCULUS,

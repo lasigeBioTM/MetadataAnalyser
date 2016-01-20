@@ -2,7 +2,8 @@ package pt.ma.parse.interfaces;
 
 import java.util.List;
 
-import pt.ma.parse.MetaTerm;
+import pt.ma.metadata.MetaClass;
+import pt.ma.metadata.MetaTerm;
 
 /**
  * 
@@ -13,9 +14,10 @@ public interface IMetaTerms {
 
 	/**
 	 * 
+	 * @param metaClass
 	 * @return
 	 */
-	public List<MetaTerm> getMetaTerms();
+	public List<MetaTerm> getMetaTerms(MetaClass metaClass);
 	
 	/**
 	 * 

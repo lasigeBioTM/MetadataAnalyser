@@ -1,5 +1,6 @@
-package pt.ma.concepts;
+package pt.ma.annotation;
 
+import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -10,17 +11,23 @@ import pt.blackboard.DSL;
 import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
+import pt.blackboard.protocol.AnnotationsOutgoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.ParseDelegateOutgoing;
+import pt.blackboard.protocol.ParseReadyOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
-import pt.ma.parse.MetaData;
+import pt.ma.metadata.MetaAnnotation;
+import pt.ma.metadata.MetaClass;
+import pt.ma.metadata.MetaData;
+import pt.ma.parse.interfaces.IMetaAnnotations;
+import pt.ma.parse.metabolights.ParseAnnotationsMetaboLights;
 
 /**
  * 
  * @author Bruno
  *
  */
-public class ConceptsObject extends DSL {
+public class AnnotationObject extends DSL {
 	
 	/**
 	 * 
@@ -42,7 +49,7 @@ public class ConceptsObject extends DSL {
 	 * @param blackboard
 	 * @param verbose
 	 */
-	public ConceptsObject(
+	public AnnotationObject(
 			IBlackboard blackboard, 
 			boolean verbose) {
 		this.verbose = verbose;
@@ -57,9 +64,7 @@ public class ConceptsObject extends DSL {
 		new Thread(new ParseBlackboardParseRead(this.blackboard)).start();
 				
 		// open a thread for writing to the blackboard
-		new Thread(new ParseBlackboardWrite(
-				this.blackboard, 
-				blackboardOutgoingQueue)).start();
+		new Thread(new ParseBlackboardWrite(blackboardOutgoingQueue)).start();
 
 	}
 	
@@ -80,10 +85,12 @@ public class ConceptsObject extends DSL {
 		switch (source) {
 			
 			case PARSE:
+				
 				// message sent from Proxy component
 				ParseDelegateOutgoing protocolProxy = gson.fromJson(
 						message, 
 						ParseDelegateOutgoing.class);
+				List<MetaClass> bodyClasses = protocolProxy.getMetaClasses();
 				byte[] bodyParse = protocolProxy.getBody();
 				switch (protocolProxy.getRequestType()) {
 				
@@ -92,9 +99,11 @@ public class ConceptsObject extends DSL {
 						break;
 						
 					case METADATAANALYSIS:
-						// an hole metadata file analysis 
+						// an hole metadata file analysis
+						jobUUID = protocolProxy.getUniqueID(); 
 						parseMetadataFile(
-								protocolProxy.getUniqueID(), 
+								jobUUID,
+								bodyClasses,
 								bodyParse);
 						break;
 						
@@ -118,6 +127,20 @@ public class ConceptsObject extends DSL {
 	 */
 	private void sendBLBMessage(MessageProtocol protocol) {
 		
+		// send outgoing protocol message to the blackboard
+		Gson gson = new Gson(); String message = null;
+		switch (protocol.getComponentTarget()) {
+		
+			case PARSE:
+				// blackboard message to parse component
+				message = gson.toJson((AnnotationsOutgoing)protocol);
+				blackboard.put(Tuple(TupleKey.ANNOTATIONSOUT, message));				
+				break;
+				
+			default:
+				// TODO: log action
+				break;
+		}
 		
 	}
 
@@ -128,7 +151,32 @@ public class ConceptsObject extends DSL {
 	 */
 	private void parseMetadataFile(
 			UUID jobUUID, 
+			List<MetaClass> metaClasses,
 			byte[] body) {
+		
+		// TODO: Averiguar a hipóstese de saber que parser utilizar
+		
+		// parse annotations for each meta class given
+		IMetaAnnotations parseAnnotations = new ParseAnnotationsMetaboLights(body);
+		for (MetaClass metaClass: metaClasses) {
+
+			// read all available annotations for this meta class			
+			List<MetaAnnotation> annotations = parseAnnotations.getMetaAnnotations(metaClass);
+			
+			// add all read new annotations to the meta class
+			metaClass.removeAllAnnotations();
+			for (MetaAnnotation annotation : annotations) {
+				metaClass.addMetaAnnotation(annotation);	
+			}
+			
+		}
+		
+		// send a blackboard message to parse component with the results
+		AnnotationsOutgoing protocol = new AnnotationsOutgoing(
+				jobUUID,
+				metaClasses,
+				ComponentList.PARSE);
+		blackboardOutgoingQueue.add(protocol);
 		
 	}
 	
@@ -166,7 +214,7 @@ public class ConceptsObject extends DSL {
 			while (!Thread.currentThread().isInterrupted()) {
 
 				// waits for a PARSEOUT tuple
-				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.CONCEPTSIN));
+				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.ANNOTATIONSIN));
 				String protocol = tuple.getData().toArray()[1].toString();
 				
 				// TODO: Logging action
@@ -191,11 +239,6 @@ public class ConceptsObject extends DSL {
 	private class ParseBlackboardWrite extends DSL implements Runnable {
 
 		/**
-		 * Locally managed blackboard instance
-		 */
-		private IBlackboard blackboard;
-
-		/**
 		 * 
 		 */
 		private Queue<MessageProtocol> outgoingQueue;
@@ -205,10 +248,7 @@ public class ConceptsObject extends DSL {
 		 * @param blackboard
 		 * @param outgoingQueue
 		 */
-		public ParseBlackboardWrite(
-				IBlackboard blackboard, 
-				Queue<MessageProtocol> outgoingQueue) {
-			this.blackboard = blackboard;
+		public ParseBlackboardWrite(Queue<MessageProtocol> outgoingQueue) {
 			this.outgoingQueue = outgoingQueue;
 			
 		}
