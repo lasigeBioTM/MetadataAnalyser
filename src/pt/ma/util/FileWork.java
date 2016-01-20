@@ -23,9 +23,9 @@ public class FileWork {
 			fileInputStream = new FileInputStream(file);
 			fileInputStream.read(bFile);
 			fileInputStream.close();
-			for (int i = 0; i < bFile.length; i++) {
+			/*for (int i = 0; i < bFile.length; i++) {
 				System.out.print((char) bFile[i]);
-			}
+			}*/
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

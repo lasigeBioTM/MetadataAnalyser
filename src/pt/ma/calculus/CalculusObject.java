@@ -1,13 +1,13 @@
 package pt.ma.calculus;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.google.gson.Gson;
@@ -68,7 +68,7 @@ public class CalculusObject extends DSL {
 		this.blackboard = blackboard;
 		
 		// start active parse jobs data structure
-		this.metadataActiveJobs = new HashMap<UUID, CalculusJob>();
+		this.metadataActiveJobs = new ConcurrentHashMap<UUID, CalculusJob>();
 		
 		// set blackboard outgoing messages queue
 		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
@@ -360,9 +360,13 @@ public class CalculusObject extends DSL {
 			MetaClass metaClass) {
 					
 		// calculate average specificity value for this class
-		double avgCovValue = (double)
-			   (Double.valueOf(metaClass.getMetaAnnotations().size()) / 
-					   Double.valueOf(metaClass.getMetaTerms().size()));
+		double avgCovValue = 0f;
+		if (metaClass.getMetaAnnotations().size() > 0 && 
+				metaClass.getMetaTerms().size() > 0) {
+			avgCovValue = (double)
+				   (Double.valueOf(metaClass.getMetaAnnotations().size()) / 
+						   Double.valueOf(metaClass.getMetaTerms().size()));
+		}
 		metaClass.setCovValue(avgCovValue);			
 		
 		// TODO: log action

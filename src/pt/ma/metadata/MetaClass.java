@@ -251,7 +251,8 @@ public class MetaClass implements Serializable {
 
 	@Override
 	public String toString() {
-		/*StringBuilder result = new StringBuilder();
+		/*
+		StringBuilder result = new StringBuilder();
 		result.append("--[");
 		result.append("\tID: " + this.id + "\n");
 		result.append("\tUniqueID: " + this.uniqueID + "\n");

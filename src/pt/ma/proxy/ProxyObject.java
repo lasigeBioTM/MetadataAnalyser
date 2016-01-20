@@ -1,14 +1,15 @@
 package pt.ma.proxy;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import pt.blackboard.DSL;
 import pt.blackboard.IBlackboard;
@@ -74,7 +75,7 @@ public class ProxyObject extends DSL implements Observer {
 		this.verbose = verbose;
 		
 		//
-		this.tpcReceivedMessagesMap = new HashMap<UUID, ProxyMapObject>();
+		this.tpcReceivedMessagesMap = new ConcurrentHashMap<UUID, ProxyMapObject>();
 		
 		//
 		this.blackboardOutgoingQueue = new LinkedBlockingQueue<ProxyDelegateOutgoing>();
@@ -190,7 +191,8 @@ public class ProxyObject extends DSL implements Observer {
 			ComponentList source) {
 		
 		// parse protocol message
-		Gson gson = new Gson(); UUID msgUUID = null;  
+		UUID msgUUID = null;
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		switch (source) {
 		
 			case CALCULUS:
@@ -204,7 +206,7 @@ public class ProxyObject extends DSL implements Observer {
 				ProxyMapObject mapObject = tpcReceivedMessagesMap.get(msgUUID);
 
 				// prepare the output message to be sent to original unique id
-System.out.println(protocolCalculus.getBody());				
+//System.out.println(protocolCalculus.getBody());				
 				String jsonBody = gson.toJson(protocolCalculus.getBody());
 				byte[] respbody = jsonBody.getBytes();
 				

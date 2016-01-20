@@ -213,7 +213,6 @@ public class MetaData {
 		result.append("\tID: " + this.id + "\n");
 		result.append("\tUniqueID: " + this.uniqueID + "\n");
 		result.append("\tCheckSum: " + this.checkSum + "\n");
-		result.append("\tCheckCount: " + this.checkCount + "\n");
 		result.append("\tParseDate: " + this.parseDate + "\n");
 		result.append("\tParseDuration: " + this.parseDuration + " (miliseconds)\n");
 		result.append("\tOntologies: (" + this.ontologies.size() + ")" + "\n");

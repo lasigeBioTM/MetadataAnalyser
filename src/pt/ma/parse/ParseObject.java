@@ -2,13 +2,13 @@ package pt.ma.parse;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.google.gson.Gson;
@@ -29,8 +29,8 @@ import pt.ma.exception.InactiveJobException;
 import pt.ma.metadata.MetaAnnotation;
 import pt.ma.metadata.MetaClass;
 import pt.ma.metadata.MetaData;
-import pt.ma.metadata.MetaTerm;
 import pt.ma.metadata.MetaObjective;
+import pt.ma.metadata.MetaTerm;
 import pt.ma.parse.interfaces.IMetaHeader;
 import pt.ma.parse.interfaces.IMetaOntologies;
 import pt.ma.parse.metabolights.ParseHeaderMetaboLights;
@@ -82,7 +82,7 @@ public class ParseObject extends DSL {
 		this.blackboard = blackboard;
 		
 		// start active parse jobs data structure
-		this.metadataActiveJobs = new HashMap<UUID, ParseJob>();
+		this.metadataActiveJobs = new ConcurrentHashMap<UUID, ParseJob>();
 
 		// set blackboard outgoing messages queue
 		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
@@ -295,6 +295,7 @@ public class ParseObject extends DSL {
 		MetaData metaData = jobActive.getMetaData();
 		
 		// TODO: log action
+System.out.println("Parse Annotation Response");		
 		
 		// iterate trough all metadata classes and add the new annotations
 		for (MetaClass metaClass : metaData.getMetaClasses()) {
@@ -304,12 +305,12 @@ public class ParseObject extends DSL {
 			while(respIterator.hasNext() && !classFound) {
 				MetaClass respClass = respIterator.next();
 				if (metaClass.equals(respClass)) {
-//System.out.println("MetaClass: " + metaClass.getClassName() + "; RespClass: " + respClass.getClassName());					
+System.out.println("MetaClass: " + metaClass.getClassName() + "; RespClass: " + respClass.getClassName());					
 					//
 					metaClass.removeAllTerms();
 					for (MetaAnnotation respAnnotation : respClass.getMetaAnnotations()) {
 						// TODO: set any term remaining property
-//System.out.println(respAnnotation.get());
+System.out.println(respAnnotation.getURI());
 						MetaAnnotation itemAnnotation = new MetaAnnotation(
 								respAnnotation.getId(), 
 								respAnnotation.getURI());
@@ -348,6 +349,7 @@ public class ParseObject extends DSL {
 		MetaData metaData = jobActive.getMetaData();
 		
 		// TODO: log action
+System.out.println("Parse Term Response");
 		
 		// iterate trough all metadata classes and add the new annotations
 		for (MetaClass metaClass : metaData.getMetaClasses()) {
