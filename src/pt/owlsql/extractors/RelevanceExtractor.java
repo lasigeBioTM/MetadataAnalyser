@@ -10,7 +10,7 @@ import java.util.HashSet;
 import org.semanticweb.owlapi.model.EntityType;
 import org.semanticweb.owlapi.model.OWLClass;
 
-import pt.json.JSONException;
+import pt.ma.json.JSONException;
 import pt.owlsql.DependencyException;
 import pt.owlsql.Extractor;
 

@@ -17,7 +17,7 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 
-import pt.json.JSONException;
+import pt.ma.json.JSONException;
 import pt.owlsql.Config;
 import pt.owlsql.DependencyException;
 import pt.owlsql.Extractor;

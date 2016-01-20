@@ -6,7 +6,7 @@ import java.sql.Statement;
 
 import org.semanticweb.owlapi.model.EntityType;
 
-import pt.json.JSONException;
+import pt.ma.json.JSONException;
 import pt.owlsql.DependencyException;
 import pt.owlsql.Extractor;
 

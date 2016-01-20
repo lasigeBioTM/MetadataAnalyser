@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 
-import pt.json.JSONException;
+import pt.ma.json.JSONException;
 import pt.owlsql.extractors.SQLCoreUtils;
 
 import com.google.gson.JsonElement;

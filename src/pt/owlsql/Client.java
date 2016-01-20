@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import pt.json.JSONException;
+import pt.ma.json.JSONException;
 
 
 public class Client {

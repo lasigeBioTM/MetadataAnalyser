@@ -1,13 +1,13 @@
 package pt.main;
 
 import pt.blackboard.Blackboard;
-import pt.ma.annotation.AnnotationObject;
-import pt.ma.calculus.CalculusObject;
-import pt.ma.log.LogObject;
-import pt.ma.owl.OWLObject;
-import pt.ma.parse.ParseObject;
-import pt.ma.proxy.ProxyObject;
-import pt.ma.term.TermObject;
+import pt.ma.component.annotation.AnnotationObject;
+import pt.ma.component.calculus.CalculusObject;
+import pt.ma.component.log.LogObject;
+import pt.ma.component.owl.OWLObject;
+import pt.ma.component.parse.ParseObject;
+import pt.ma.component.proxy.ProxyObject;
+import pt.ma.component.term.TermObject;
 
 /**
  * 

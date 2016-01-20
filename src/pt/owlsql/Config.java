@@ -31,9 +31,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import au.com.bytecode.opencsv.CSVWriter;
-import pt.json.JSONException;
-import pt.ma.owl.object.BioontologyDownloader;
+import pt.ma.json.JSONException;
 import pt.owlsql.extractors.SQLCoreUtils;
+import pt.owlsql.proof.BioontologyDownloader;
 
 
 public final class Config {

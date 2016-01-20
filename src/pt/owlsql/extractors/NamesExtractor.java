@@ -16,7 +16,7 @@ import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLOntology;
 
-import pt.json.JSONException;
+import pt.ma.json.JSONException;
 import pt.owlsql.Config;
 import pt.owlsql.DependencyException;
 import pt.owlsql.Extractor;

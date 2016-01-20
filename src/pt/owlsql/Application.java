@@ -25,9 +25,9 @@ import com.google.gson.JsonParser;
 
 import difflib.Delta;
 import difflib.Delta.TYPE;
+import pt.ma.json.JSONException;
 import difflib.DiffUtils;
 import difflib.Patch;
-import pt.json.JSONException;
 
 
 /**

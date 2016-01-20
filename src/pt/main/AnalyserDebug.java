@@ -9,9 +9,9 @@ import org.eclipse.jetty.webapp.MetaData;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import pt.ma.proxy.network.Interface;
-import pt.ma.proxy.network.Message;
-import pt.ma.proxy.network.MessageType;
+import pt.ma.component.proxy.network.Interface;
+import pt.ma.component.proxy.network.Message;
+import pt.ma.component.proxy.network.MessageType;
 import pt.ma.util.FileWork;
 
 /**

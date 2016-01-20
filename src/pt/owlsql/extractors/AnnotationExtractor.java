@@ -14,7 +14,7 @@ import java.util.Map.Entry;
 
 import org.semanticweb.owlapi.model.IRI;
 
-import pt.json.JSONException;
+import pt.ma.json.JSONException;
 import pt.owlsql.DependencyException;
 import pt.owlsql.Extractor;
 
