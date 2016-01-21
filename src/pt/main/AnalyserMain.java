@@ -4,6 +4,7 @@ import pt.blackboard.Blackboard;
 import pt.ma.component.annotation.AnnotationObject;
 import pt.ma.component.calculus.CalculusObject;
 import pt.ma.component.log.LogObject;
+import pt.ma.component.log.LogTarget;
 import pt.ma.component.owl.OWLObject;
 import pt.ma.component.parse.ParseObject;
 import pt.ma.component.proxy.ProxyObject;
@@ -61,7 +62,7 @@ public class AnalyserMain {
 		blackboard = new Blackboard();
 		
 		// start all solution components
-		log = new LogObject(blackboard);
+		log = new LogObject(blackboard, LogTarget.FILE);
 		owl = new OWLObject(blackboard, INSTALL_DB, VERBOSE);
 		calculus = new CalculusObject(blackboard, VERBOSE);
 		terms = new TermObject(blackboard, VERBOSE);

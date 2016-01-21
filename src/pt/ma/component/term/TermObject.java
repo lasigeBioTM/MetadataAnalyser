@@ -12,10 +12,12 @@ import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.AnnotationsOutgoing;
+import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.ParseDelegateOutgoing;
 import pt.blackboard.protocol.TermsOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
+import pt.ma.component.log.LogType;
 import pt.ma.component.parse.interfaces.IMetaTerms;
 import pt.ma.component.parse.metabolights.ParseTermsMetaboLights;
 import pt.ma.metadata.MetaClass;
@@ -60,8 +62,18 @@ public class TermObject extends DSL {
 		// set blackboard outgoing messages queue
 		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
 
+		// log action
+		if (this.verbose) {
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: Component has started",
+					LogType.INFO,
+					ComponentList.LOG));
+		}
+
 		// open threads for reading from blackboard
-		new Thread(new ParseBlackboardParseRead(this.blackboard)).start();
+		new Thread(new ParseBlackboardParseRead(
+				this.blackboard,
+				this.verbose)).start();
 				
 		// open a thread for writing to the blackboard
 		new Thread(new ParseBlackboardWrite(
@@ -85,37 +97,84 @@ public class TermObject extends DSL {
 		Gson gson = new Gson();
 		UUID jobUUID = null; MetaData jobActive = null; 
 		switch (source) {
-			
 			case PARSE:
-				// message sent from Proxy component
-				ParseDelegateOutgoing protocolProxy = gson.fromJson(
-						message, 
-						ParseDelegateOutgoing.class);
-				List<MetaClass> bodyClasses = protocolProxy.getMetaClasses();
-				byte[] bodyParse = protocolProxy.getBody();
-				switch (protocolProxy.getRequestType()) {
-				
-					case CONCEPTANALYSIS:
-						// an concept analysis only
-						break;
-						
-					case METADATAANALYSIS:
-						// an hole metadata file analysis 
-						parseMetadataFile(
-								protocolProxy.getUniqueID(),
-								bodyClasses,
-								bodyParse);
-						break;
-						
-					default:
-						// TODO: something's wrong
-						break;
-						
+				try {
+					// message sent from Proxy component
+					ParseDelegateOutgoing protocolProxy = gson.fromJson(
+							message, 
+							ParseDelegateOutgoing.class);
+					List<MetaClass> bodyClasses = protocolProxy.getMetaClasses();
+					byte[] bodyParse = protocolProxy.getBody();
+					switch (protocolProxy.getRequestType()) {
+					
+						case CONCEPTANALYSIS:
+							// log action
+							if (this.verbose) {
+								blackboardOutgoingQueue.add(new LogIngoing( 
+										"[" + this.getClass().getName() + "]: Blackboard message received " + 
+												"from PARSE component, for Job ID: " + protocolProxy.getUniqueID() + 
+												". About to initiate METADATA FILE parsing process.",
+										LogType.INFO,
+										ComponentList.LOG));
+							}
+
+							// an hole metadata file analysis 
+							parseMetadataFile(
+									protocolProxy.getUniqueID(),
+									bodyClasses,
+									bodyParse);
+							break;
+							
+						case METADATAANALYSIS:
+							// log action
+							if (this.verbose) {
+								blackboardOutgoingQueue.add(new LogIngoing( 
+										"[" + this.getClass().getName() + "]: Blackboard message received " + 
+												"from PARSE component, for Job ID: " + protocolProxy.getUniqueID() + 
+												". About to initiate METADATA FILE parsing process.",
+										LogType.INFO,
+										ComponentList.LOG));
+							}
+							
+							// an hole metadata file analysis 
+							parseMetadataFile(
+									protocolProxy.getUniqueID(),
+									bodyClasses,
+									bodyParse);
+							break;
+							
+						default:
+							// log action
+							if (this.verbose) {
+								blackboardOutgoingQueue.add(new LogIngoing( 
+										"[" + this.getClass().getName() + "]: Blackboard message received " + 
+												"is not possible to determine REQUEST TYPE.",
+										LogType.ERROR,
+										ComponentList.LOG));
+							}
+							break;
+							
+					}
+					
+				} catch (Exception e) {
+					// log action
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: An error as occured parsing a " + 
+							"PARSE blackboard component message. Error: " + e.getMessage(),
+							LogType.ERROR,
+							ComponentList.LOG));
 				}
 				break;
 				
 			default:
-				// TODO: something's wrong
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard message received " + 
+									"is not possible to determine source COMPONENT.",
+							LogType.ERROR,
+							ComponentList.LOG));
+				}
 				break;
 				
 		}
@@ -146,6 +205,15 @@ public class TermObject extends DSL {
 				metaClass.addMetaTerm(term);	
 			}
 			
+			// log action
+			if (this.verbose) {
+				blackboardOutgoingQueue.add(new LogIngoing( 
+						"[" + this.getClass().getName() + "]: Parsing process for MetaClass: " + 
+						metaClass.getClassName() + " returned #" + terms.size() + " Terms, for Job ID: " + 
+						jobUUID,
+						LogType.INFO,
+						ComponentList.LOG));
+			}						
 		}
 		
 		// send a blackboard message to parse component with the results
@@ -154,8 +222,7 @@ public class TermObject extends DSL {
 				metaClasses,
 				ComponentList.PARSE);
 		blackboardOutgoingQueue.add(protocol);
-		
-		
+	
 	}
 
 	/**
@@ -169,13 +236,24 @@ public class TermObject extends DSL {
 		switch (protocol.getComponentTarget()) {
 		
 			case PARSE:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to PARSE Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+
 				// blackboard message to parse component
 				message = gson.toJson((TermsOutgoing)protocol);
 				blackboard.put(Tuple(TupleKey.TERMSOUT, message));				
 				break;
 				
 			default:
-				// TODO: log action
+				// log action
+				message = gson.toJson((LogIngoing)protocol);
+				blackboard.put(Tuple(TupleKey.LOGIN, message));
 				break;
 		}
 
@@ -197,20 +275,31 @@ public class TermObject extends DSL {
 		
 		/**
 		 * 
+		 */
+		private boolean verbose;
+		
+		/**
+		 * 
 		 * @param blackboard
 		 */
 		public ParseBlackboardParseRead(
-				IBlackboard blackboard) {
+				IBlackboard blackboard,
+				boolean verbose) {
 			this.blackboard = blackboard;
-			
+			this.verbose = verbose;
 		}
 
 		@Override
 		public void run() {
 
-			// TODO: Logging action
-			
-			
+			// log action
+			if (this.verbose) {
+				blackboardOutgoingQueue.add(new LogIngoing( 
+						"[" + this.getClass().getName() + "]: Blackboard PARSE Read Thread has started.",
+						LogType.INFO,
+						ComponentList.LOG));
+			}
+						
 			// Infinite loop
 			while (!Thread.currentThread().isInterrupted()) {
 
@@ -218,17 +307,19 @@ public class TermObject extends DSL {
 				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.TERMSIN));
 				String protocol = tuple.getData().toArray()[1].toString();
 				
-				// TODO: Logging action
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard Parse message received.",
+							LogType.INFO,
+							ComponentList.LOG));
+				}
 				
 				// process request sent from parse component
 				receiveBLBMessage(
 						protocol, 
-						ComponentList.PARSE);
-				
+						ComponentList.PARSE);				
 			}
-			
-			// TODO: Logging action
-
 		}
 	}	
 		
@@ -274,8 +365,6 @@ public class TermObject extends DSL {
 					// send this message to blackboard
 					sendBLBMessage(outgoingQueue.poll());
 									
-					// TODO: log action
-					
 					// wait for 5 seconds
 					try {
 						Thread.sleep(5000);
@@ -285,9 +374,7 @@ public class TermObject extends DSL {
 					}
 				}
 			}
-
 		}
-
 	}
 
 }

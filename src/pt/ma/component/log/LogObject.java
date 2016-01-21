@@ -1,14 +1,12 @@
 package pt.ma.component.log;
 
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import com.google.gson.Gson;
 
 import pt.blackboard.DSL;
 import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
-import pt.blackboard.protocol.MessageProtocol;
-import pt.blackboard.protocol.enums.ComponentList;
+import pt.blackboard.protocol.LogIngoing;
 
 /**
  * 
@@ -21,18 +19,28 @@ public class LogObject extends DSL {
 	 * 
 	 */
 	private IBlackboard blackboard;
+
+	/**
+	 * 
+	 */
+	private LogTarget logType;
 	
 	/**
 	 * 
 	 * @param blackboard
+	 * @param logType
 	 */
-	public LogObject(IBlackboard blackboard) {
+	public LogObject(
+			IBlackboard blackboard, 
+			LogTarget logType) {
 		
 		// assign blackboard instance
 		this.blackboard = blackboard;
 		
 		// open threads for reading from blackboard
-		new Thread(new ParseBlackboardAllRead(this.blackboard)).start();
+		new Thread(new ParseBlackboardAllRead(
+				this.blackboard,
+				this.logType)).start();
 				
 	}
 	
@@ -44,8 +52,31 @@ public class LogObject extends DSL {
 	 * @param source
 	 */
 	private void receiveBLBMessage(String message) {
-
 		
+		//
+		// a new message from Parse component
+		Gson gson = new Gson(); 
+		LogIngoing protocolLog = gson.fromJson(
+				message, 
+				LogIngoing.class);
+
+		switch (protocolLog.getLogType()) {
+			case ERROR:
+				AppHelper.logError(protocolLog.getBody());
+				break;
+			
+			case ERRORWITHTHROWABLE:
+				AppHelper.logError(
+						protocolLog.getBody(), 
+						protocolLog.getThrowable());
+				break;
+				
+			default:
+				AppHelper.logInfo(protocolLog.getBody());
+				break;
+				
+		}
+				
 	}
 	// PRIVATE CLASSES
 	
@@ -63,19 +94,24 @@ public class LogObject extends DSL {
 		
 		/**
 		 * 
+		 */
+		private LogTarget logType;
+
+		/**
+		 * 
 		 * @param blackboard
+		 * @param logType
 		 */
 		public ParseBlackboardAllRead(
-				IBlackboard blackboard) {
+				IBlackboard blackboard,
+				LogTarget logType) {
 			this.blackboard = blackboard;
+			this.logType = logType;
 			
 		}
 
 		@Override
 		public void run() {
-
-			// TODO: Logging action
-			
 			
 			// Infinite loop
 			while (!Thread.currentThread().isInterrupted()) {
@@ -90,8 +126,6 @@ public class LogObject extends DSL {
 				receiveBLBMessage(protocol);
 				
 			}
-			
-			// TODO: Logging action
 
 		}
 	}	

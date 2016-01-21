@@ -62,14 +62,12 @@ public class ParseTermsMetaboLights implements IMetaTerms {
 				if (!matcher.find()) {
 					//
 					matcher = patternD.matcher(previousLine);
-System.out.println(previousLine);
 					while(matcher.find()) {
 						for(int i = 0; i < matcher.groupCount(); i++) {
 							try {
 								// 
 								String termName = StringWork.sanitaze(matcher.group(i).trim());
 								if (termName.length() > 0) {
-System.out.println(termName);
 									String termID = "TERM_" + String.valueOf(termCounter); 
 									MetaTerm term = new MetaTerm(termID, termName);
 									terms.add(term);
@@ -85,7 +83,6 @@ System.out.println(termName);
 				}
 			}
 			previousLine = actualLine;
-			
 		}
 		scanner.close();
 		

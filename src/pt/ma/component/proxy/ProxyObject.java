@@ -16,10 +16,12 @@ import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.CalculusReadyOutgoing;
+import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.ProxyDelegateOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
 import pt.blackboard.protocol.enums.RequestType;
+import pt.ma.component.log.LogType;
 import pt.ma.component.proxy.network.Interface;
 import pt.ma.component.proxy.network.Message;
 import pt.ma.component.proxy.network.MessageType;
@@ -54,7 +56,7 @@ public class ProxyObject extends DSL implements Observer {
 	/**
 	 * 
 	 */
-	private Queue<ProxyDelegateOutgoing> blackboardOutgoingQueue;
+	private Queue<MessageProtocol> blackboardOutgoingQueue;
 	
 	/**
 	 * 
@@ -67,26 +69,39 @@ public class ProxyObject extends DSL implements Observer {
 	 * @param verbose
 	 */
 	public ProxyObject(IBlackboard blackboard, boolean verbose)  {
-		
-		// Assign blackboard instance
-		this.blackboard = blackboard;
-		
 		//
 		this.verbose = verbose;
-		
+
+		// Assign blackboard instance
+		this.blackboard = blackboard;
+					
 		//
 		this.tpcReceivedMessagesMap = new ConcurrentHashMap<UUID, ProxyMapObject>();
 		
 		//
-		this.blackboardOutgoingQueue = new LinkedBlockingQueue<ProxyDelegateOutgoing>();
-		
+		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
+
+		// log action
+		if (this.verbose) {
+			String logmsg = "[" + this.getClass().getName() + "]: Component has started";
+			LogIngoing protocol = new LogIngoing( 
+					logmsg,
+					LogType.INFO,
+					ComponentList.LOG);
+			blackboardOutgoingQueue.add(protocol);
+
+		}
+
 		// open a thread for reading from blackboard
-		new Thread(new ProxyBlackboardCalculusRead(this.blackboard)).start();
+		new Thread(new ProxyBlackboardCalculusRead(
+				this.blackboard, 
+				this.verbose)).start();
 
 		// open a thread for writing to the blackboard
 		new Thread(new ProxyBlackboardWrite(
 				this.blackboard, 
-				this.blackboardOutgoingQueue)).start();
+				this.blackboardOutgoingQueue, 
+				this.verbose)).start();
 		
 		// open network interface
 		network = new Interface(
@@ -109,8 +124,12 @@ public class ProxyObject extends DSL implements Observer {
 				receiveTCPMessage(message);
 				
 				// log action
-				if (verbose) {
-					System.out.println("[Communication :Info] Observers notification for received message");
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Observers notification for " + 
+							"received message, with Message ID: " + message.getUUID(),
+							LogType.INFO,
+							ComponentList.LOG));
 				}
 				
 			} catch (Exception e) {
@@ -121,6 +140,7 @@ public class ProxyObject extends DSL implements Observer {
 	}
 	
 	// PRIVATE METHODS
+	
 	
 	/**
 	 * 
@@ -148,6 +168,15 @@ public class ProxyObject extends DSL implements Observer {
 				System.currentTimeMillis());
 		tpcReceivedMessagesMap.put(requestUUID, mapObject);
 		
+		// log action
+		if (this.verbose) {
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: New TCP message received, " + 
+					"Job ID assigned: " + requestUUID,
+					LogType.INFO,
+					ComponentList.LOG));
+		}
+
 		// create a new blackboard outgoing message protocol 
 		ProxyDelegateOutgoing protocol = new ProxyDelegateOutgoing(
 				requestUUID, 
@@ -169,14 +198,26 @@ public class ProxyObject extends DSL implements Observer {
 		switch (protocol.getComponentTarget()) {
 		
 			case PARSE:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to Parse Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+
 				// blackboard message to Parse component
 				message = gson.toJson((ProxyDelegateOutgoing)protocol);
 				blackboard.put(Tuple(TupleKey.PROXYOUT, message));				
 				break;
 
 			default:
-				// TODO: log action
+				// log action
+				message = gson.toJson((LogIngoing)protocol);
+				blackboard.put(Tuple(TupleKey.LOGIN, message));
 				break;
+				
 		}
 				
 	}
@@ -191,7 +232,6 @@ public class ProxyObject extends DSL implements Observer {
 			ComponentList source) {
 		
 		// parse protocol message
-		UUID msgUUID = null;
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		switch (source) {
 		
@@ -202,14 +242,23 @@ public class ProxyObject extends DSL implements Observer {
 						CalculusReadyOutgoing.class);
 
 				// get proxy map object for this uuid
-				msgUUID = protocolCalculus.getUniqueID();
-				ProxyMapObject mapObject = tpcReceivedMessagesMap.get(msgUUID);
+				ProxyMapObject mapObject = tpcReceivedMessagesMap.get(protocolCalculus.getUniqueID());
 
-				// prepare the output message to be sent to original unique id
-//System.out.println(protocolCalculus.getBody());				
+				// prepare the output message to be sent to original unique id				
 				String jsonBody = gson.toJson(protocolCalculus.getBody());
 				byte[] respbody = jsonBody.getBytes();
 				
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard message received " + 
+									"from CALCULUS component, for Job ID: " + protocolCalculus.getUniqueID() + 
+									". About to send TCP response " + 
+									"to Client.",
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+
 				// build and send a new tcp message
 				Message tcpMessage = new Message( 
 						mapObject.getSenderTCPIP(),
@@ -220,7 +269,14 @@ public class ProxyObject extends DSL implements Observer {
 				break;
 				
 			default:
-				// TODO: something's wrong
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard message received " + 
+									"is not possible to determine source COMPONENT.",
+							LogType.ERROR,
+							ComponentList.LOG));
+				}
 				break;
 		}
 		
@@ -243,10 +299,16 @@ public class ProxyObject extends DSL implements Observer {
 		
 		/**
 		 * 
+		 */
+		private boolean verbose;
+		
+		/**
+		 * 
 		 * @param blackboard
 		 */
 		public ProxyBlackboardCalculusRead(
-				IBlackboard blackboard) {
+				IBlackboard blackboard,
+				boolean verbose) {
 			this.blackboard = blackboard;
 			
 		}
@@ -254,9 +316,14 @@ public class ProxyObject extends DSL implements Observer {
 		@Override
 		public void run() {
 
-			// TODO: Logging action
-			
-			
+			// log action
+			if (this.verbose) {
+				blackboardOutgoingQueue.add(new LogIngoing( 
+						"[" + this.getClass().getName() + "]: Blackboard Calculus Read Thread has started.",
+						LogType.INFO,
+						ComponentList.LOG));
+			}
+		
 			// Infinite loop
 			while (!Thread.currentThread().isInterrupted()) {
 
@@ -264,19 +331,21 @@ public class ProxyObject extends DSL implements Observer {
 				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.PROXYIN));
 				String protocol = tuple.getData().toArray()[1].toString();
 				
-				// TODO: Logging action
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard Calculus message received.",
+							LogType.INFO,
+							ComponentList.LOG));
+				}
 				
-				// 
+				// parse the blackboard message received 
 				receiveBLBMessage(
 						protocol, 
 						ComponentList.CALCULUS);
 				
 			}
-			
-			// TODO: Logging action
-
 		}
-		
 	}
 	
 	/**
@@ -294,7 +363,12 @@ public class ProxyObject extends DSL implements Observer {
 		/**
 		 * 
 		 */
-		private Queue<ProxyDelegateOutgoing> outgoingQueue;
+		private boolean verbose;
+		
+		/**
+		 * 
+		 */
+		private Queue<MessageProtocol> outgoingQueue;
 
 		/**
 		 * 
@@ -303,9 +377,11 @@ public class ProxyObject extends DSL implements Observer {
 		 */
 		public ProxyBlackboardWrite(
 				IBlackboard blackboard, 
-				Queue<ProxyDelegateOutgoing> outgoingQueue) {
+				Queue<MessageProtocol> outgoingQueue,
+				boolean verbose) {
 			this.blackboard = blackboard;
 			this.outgoingQueue = outgoingQueue;
+			this.verbose = verbose;
 			
 		}
 
@@ -320,9 +396,7 @@ public class ProxyObject extends DSL implements Observer {
 					
 					// send this message to blackboard
 					sendBLBMessage(outgoingQueue.poll());
-									
-					// TODO: log action
-					
+
 					// wait for 5 seconds
 					try {
 						Thread.sleep(5000);
@@ -332,10 +406,7 @@ public class ProxyObject extends DSL implements Observer {
 					}
 				}
 			}
-
 		}
-
-
 	}
 	
 	/**

@@ -18,6 +18,7 @@ import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.AnnotationsOutgoing;
+import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.ParseDelegateOutgoing;
 import pt.blackboard.protocol.ParseReadyOutgoing;
@@ -25,6 +26,7 @@ import pt.blackboard.protocol.ProxyDelegateOutgoing;
 import pt.blackboard.protocol.TermsOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
 import pt.blackboard.protocol.enums.RequestType;
+import pt.ma.component.log.LogType;
 import pt.ma.component.parse.interfaces.IMetaHeader;
 import pt.ma.component.parse.interfaces.IMetaOntologies;
 import pt.ma.component.parse.metabolights.ParseHeaderMetaboLights;
@@ -87,10 +89,26 @@ public class ParseObject extends DSL {
 		// set blackboard outgoing messages queue
 		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
 
+		// log action
+		if (this.verbose) {
+			String logmsg = "[" + this.getClass().getName() + "]: Component has started";
+			LogIngoing protocol = new LogIngoing( 
+					logmsg,
+					LogType.INFO,
+					ComponentList.LOG);
+			blackboardOutgoingQueue.add(protocol);
+		}
+
 		// open threads for reading from blackboard
-		new Thread(new ParseBlackboardProxyRead(this.blackboard)).start();
-		new Thread(new ParseBlackboardAnnotationsRead(this.blackboard)).start();
-		new Thread(new ParseBlackboardTermsRead(this.blackboard)).start();
+		new Thread(new ParseBlackboardProxyRead(
+				this.blackboard,
+				this.verbose)).start();
+		new Thread(new ParseBlackboardAnnotationsRead(
+				this.blackboard, 
+				this.verbose)).start();
+		new Thread(new ParseBlackboardTermsRead(
+				this.blackboard, 
+				this.verbose)).start();
 
 		// open a thread to check job completeness
 		new Thread(new ParseProcessJobList(
@@ -119,28 +137,69 @@ public class ParseObject extends DSL {
 		switch (source) {
 		
 			case PROXY:		
-				// message sent from Proxy component
-				ProxyDelegateOutgoing protocolProxy = gson.fromJson(
-						message, 
-						ProxyDelegateOutgoing.class);
-				byte[] bodyProxy = protocolProxy.getBody();
-				switch (protocolProxy.getRequestType()) {
-				
-					case CONCEPTANALYSIS:
-						// an concept analysis only
-						break;
-						
-					case METADATAANALYSIS:
-						// an hole metadata file analysis 
-						parseMetadataFile(
-								protocolProxy.getUniqueID(), 
-								bodyProxy);
-						break;
-						
-					default:
-						// TODO: something's wrong
-						break;
-						
+				try {
+					// message sent from Proxy component
+					ProxyDelegateOutgoing protocolProxy = gson.fromJson(
+							message, 
+							ProxyDelegateOutgoing.class);
+					byte[] bodyProxy = protocolProxy.getBody();
+					switch (protocolProxy.getRequestType()) {
+					
+						case CONCEPTANALYSIS:
+							// log action
+							if (this.verbose) {
+								blackboardOutgoingQueue.add(new LogIngoing( 
+										"[" + this.getClass().getName() + "]: Blackboard message received " + 
+												"from PROXY component, for Job ID: " + protocolProxy.getUniqueID() + 
+												". About to initiate CONCEPT parsing process." + 
+												"to Client.",
+										LogType.INFO,
+										ComponentList.LOG));
+							}
+							
+							// an concept analysis only 
+							parseMetadataFile(
+									protocolProxy.getUniqueID(), 
+									bodyProxy);						
+							break;
+							
+						case METADATAANALYSIS:
+							// log action
+							if (this.verbose) {
+								blackboardOutgoingQueue.add(new LogIngoing( 
+										"[" + this.getClass().getName() + "]: Blackboard message received " + 
+												"from PROXY component, for Job ID: " + protocolProxy.getUniqueID() + 
+												". About to initiate METADATA FILE parsing process.",
+										LogType.INFO,
+										ComponentList.LOG));
+							}
+
+							// do an entire metadata file analysis 
+							parseMetadataFile(
+									protocolProxy.getUniqueID(), 
+									bodyProxy);
+							break;
+							
+						default:
+							// log action
+							if (this.verbose) {
+								blackboardOutgoingQueue.add(new LogIngoing( 
+										"[" + this.getClass().getName() + "]: Blackboard message received " + 
+												"is not possible to determine REQUEST TYPE.",
+										LogType.ERROR,
+										ComponentList.LOG));
+							}
+							break;
+							
+					}
+					
+				} catch (Exception e) {
+					// log action
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: An error as occured parsing a " + 
+							"PROXY blackboard component message. Error: " + e.getMessage(),
+							LogType.ERROR,
+							ComponentList.LOG));
 				}
 				break;
 
@@ -150,13 +209,30 @@ public class ParseObject extends DSL {
 					AnnotationsOutgoing protocolAnnotation = gson.fromJson(
 							message, 
 							AnnotationsOutgoing.class);
+					
+					// log action
+					if (this.verbose) {
+						blackboardOutgoingQueue.add(new LogIngoing( 
+								"[" + this.getClass().getName() + "]: Blackboard message received " + 
+										"from ANNOTATIONS component, for Job ID: " + 
+										protocolAnnotation.getUniqueID() + 
+										".",
+								LogType.INFO,
+								ComponentList.LOG));
+					}
+					
+					// parse annotation component response
 					parseAnnotationResponse(
 							protocolAnnotation.getUniqueID(),
 							protocolAnnotation.getBody());
 					
 				} catch (InactiveJobException e) {
-					// TODO log action
-					
+					// log action
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: An error as occured parsing a " + 
+							"ANNOTATIONS blackboard component message. Error: " + e.getMessage(),
+							LogType.ERROR,
+							ComponentList.LOG));
 				}				
 				break;
 				
@@ -166,18 +242,42 @@ public class ParseObject extends DSL {
 					TermsOutgoing protocolTerm = gson.fromJson(
 							message, 
 							TermsOutgoing.class);
+					
+					// log action
+					if (this.verbose) {
+						blackboardOutgoingQueue.add(new LogIngoing( 
+								"[" + this.getClass().getName() + "]: Blackboard message received " + 
+										"from TERMS component, for Job ID: " + protocolTerm.getUniqueID() + 
+										".",
+								LogType.INFO,
+								ComponentList.LOG));
+					}
+					
+					// parse term component response
 					parseTermResponse(
 							protocolTerm.getUniqueID(),
 							protocolTerm.getBody());
+					
 				} catch (InactiveJobException e) {
-					// TODO log action
-
+					// log action
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: An error as occured parsing a " + 
+							"TERMS blackboard component message. Error: " + e.getMessage(),
+							LogType.ERROR,
+							ComponentList.LOG));
 				}				
 				break;
 
 
 			default:
-				// TODO: something's wrong
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard message received " + 
+									"is not possible to determine source COMPONENT.",
+							LogType.ERROR,
+							ComponentList.LOG));
+				}
 				break;
 
 		}
@@ -194,25 +294,54 @@ public class ParseObject extends DSL {
 		switch (protocol.getComponentTarget()) {
 		
 			case ANNOTATIONS:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to ANNOTATIONS Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+
 				// blackboard message to concepts component
 				message = gson.toJson((ParseDelegateOutgoing)protocol);
 				blackboard.put(Tuple(TupleKey.ANNOTATIONSIN, message));				
 				break;
 				
 			case TERMS:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to TERMS Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+				
 				// blackboard message to terms component
 				message = gson.toJson((ParseDelegateOutgoing)protocol);
 				blackboard.put(Tuple(TupleKey.TERMSIN, message));
 				break;
 
 			case CALCULUS:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to CALCULUS Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+
 				// blackboard message to calculus component
 				message = gson.toJson((ParseReadyOutgoing)protocol);
 				blackboard.put(Tuple(TupleKey.PARSEOUT, message));
 				break;
 
 			default:
-				// TODO: log action
+				// log action
+				message = gson.toJson((LogIngoing)protocol);
+				blackboard.put(Tuple(TupleKey.LOGIN, message));
 				break;
 		}
 
@@ -241,8 +370,12 @@ public class ParseObject extends DSL {
 			metaData.setCheckSum(body);
 			
 		} catch (NoSuchAlgorithmException e) {
-			// TODO log action
-
+			// log action
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: An error as occured parsing calculating " + 
+					"metadata file body.",
+					LogType.ERROR,
+					ComponentList.LOG));
 		}
 		
 		// set all metadata ontologies
@@ -271,8 +404,6 @@ public class ParseObject extends DSL {
 				RequestType.METADATAANALYSIS); 
 		blackboardOutgoingQueue.add(termProtocol);
 		
-		// TODO: Log Action
-		
 	}
 	
 	/**
@@ -294,9 +425,15 @@ public class ParseObject extends DSL {
 		ParseJob jobActive = metadataActiveJobs.get(jobUUID);
 		MetaData metaData = jobActive.getMetaData();
 		
-		// TODO: log action
-System.out.println("Parse Annotation Response");		
-		
+		// log action
+		if (this.verbose) {
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: About to parse ANNOTATIONS component response, " + 
+					"for Job ID: " + jobUUID,
+					LogType.INFO,
+					ComponentList.LOG));
+		}
+				
 		// iterate trough all metadata classes and add the new annotations
 		for (MetaClass metaClass : metaData.getMetaClasses()) {
 			//
@@ -304,18 +441,26 @@ System.out.println("Parse Annotation Response");
 			Iterator<MetaClass> respIterator = responseBody.iterator();
 			while(respIterator.hasNext() && !classFound) {
 				MetaClass respClass = respIterator.next();
-				if (metaClass.equals(respClass)) {
-System.out.println("MetaClass: " + metaClass.getClassName() + "; RespClass: " + respClass.getClassName());					
+				if (metaClass.equals(respClass)) {					
 					//
 					metaClass.removeAllTerms();
 					for (MetaAnnotation respAnnotation : respClass.getMetaAnnotations()) {
 						// TODO: set any term remaining property
-System.out.println(respAnnotation.getURI());
 						MetaAnnotation itemAnnotation = new MetaAnnotation(
 								respAnnotation.getId(), 
 								respAnnotation.getURI());
 						metaClass.addMetaAnnotation(itemAnnotation);			
 					}
+					
+					// log action
+					if (this.verbose) {
+						blackboardOutgoingQueue.add(new LogIngoing( 
+								"[" + this.getClass().getName() + "]: Found #" + respClass.getMetaAnnotations() + 
+								" Annotations for Class Name: " + metaClass.getClassName(),
+								LogType.INFO,
+								ComponentList.LOG));
+					}
+
 					//
 					classFound = true;
 				}
@@ -324,8 +469,6 @@ System.out.println(respAnnotation.getURI());
 		
 		// set active job status
 		jobActive.setParseStatus(3);
-		
-		// TODO: log action
 		
 	}
 	
@@ -348,8 +491,14 @@ System.out.println(respAnnotation.getURI());
 		ParseJob jobActive = metadataActiveJobs.get(jobUUID);
 		MetaData metaData = jobActive.getMetaData();
 		
-		// TODO: log action
-System.out.println("Parse Term Response");
+		// log action
+		if (this.verbose) {
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: About to parse TERMS component response, " + 
+					"for Job ID: " + jobUUID,
+					LogType.INFO,
+					ComponentList.LOG));
+		}
 		
 		// iterate trough all metadata classes and add the new annotations
 		for (MetaClass metaClass : metaData.getMetaClasses()) {
@@ -358,18 +507,24 @@ System.out.println("Parse Term Response");
 			Iterator<MetaClass> respIterator = responseBody.iterator();
 			while(respIterator.hasNext() && !classFound) {
 				MetaClass respClass = respIterator.next();
-				if (metaClass.equals(respClass)) {
-System.out.println("MetaClass: " + metaClass.getClassName() + "; RespClass: " + respClass.getClassName());					
+				if (metaClass.equals(respClass)) {					
 					//
 					metaClass.removeAllTerms();
 					for (MetaTerm respTerm : respClass.getMetaTerms()) {
 						// TODO: set any term remaining property
-System.out.println(respTerm.getName());
 						MetaTerm itemTerm = new MetaTerm(
 								respTerm.getId(), 
 								respTerm.getName());
 						metaClass.addMetaTerm(itemTerm);
 						
+					}
+					// log action
+					if (this.verbose) {
+						blackboardOutgoingQueue.add(new LogIngoing( 
+								"[" + this.getClass().getName() + "]: Found #" + respClass.getMetaAnnotations() + 
+								" Terms for Class Name: " + metaClass.getClassName(),
+								LogType.INFO,
+								ComponentList.LOG));
 					}
 					//
 					classFound = true;
@@ -379,9 +534,7 @@ System.out.println(respTerm.getName());
 		
 		// set active job status
 		jobActive.setParseStatus(4);
-		
-		// TODO: log action
-		
+	
 	}
 	
 	// PRIVATE CLASSES
@@ -400,19 +553,30 @@ System.out.println(respTerm.getName());
 		
 		/**
 		 * 
+		 */
+		private boolean verbose;
+		
+		/**
+		 * 
 		 * @param blackboard
 		 */
 		public ParseBlackboardProxyRead(
-				IBlackboard blackboard) {
+				IBlackboard blackboard,
+				boolean verbose) {
 			this.blackboard = blackboard;
-			
+			this.verbose = verbose;
 		}
 
 		@Override
 		public void run() {
 
-			// TODO: Logging action
-			
+			// log action
+			if (this.verbose) {
+				blackboardOutgoingQueue.add(new LogIngoing( 
+						"[" + this.getClass().getName() + "]: Blackboard PROXY Read Thread has started.",
+						LogType.INFO,
+						ComponentList.LOG));
+			}
 			
 			// Infinite loop
 			while (!Thread.currentThread().isInterrupted()) {
@@ -421,19 +585,20 @@ System.out.println(respTerm.getName());
 				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.PROXYOUT));
 				String protocol = tuple.getData().toArray()[1].toString();
 				
-				// TODO: Logging action
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard Proxy message received.",
+							LogType.INFO,
+							ComponentList.LOG));
+				}
 				
 				// prepare the new message to be sent
 				receiveBLBMessage(
 						protocol, 
-						ComponentList.PROXY);
-				
+						ComponentList.PROXY);	
 			}
-			
-			// TODO: Logging action
-
 		}
-		
 	}	
 	
 	/**
@@ -450,19 +615,31 @@ System.out.println(respTerm.getName());
 		
 		/**
 		 * 
+		 */
+		private boolean verbose;
+		
+		/**
+		 * 
 		 * @param blackboard
 		 */
 		public ParseBlackboardAnnotationsRead(
-				IBlackboard blackboard) {
+				IBlackboard blackboard,
+				boolean verbose) {
 			this.blackboard = blackboard;
+			this.verbose = verbose;
 			
 		}
 
 		@Override
 		public void run() {
 
-			// TODO: Logging action
-			
+			// log action
+			if (this.verbose) {
+				blackboardOutgoingQueue.add(new LogIngoing( 
+						"[" + this.getClass().getName() + "]: Blackboard Annotation Read Thread has started.",
+						LogType.INFO,
+						ComponentList.LOG));
+			}
 			
 			// Infinite loop
 			while (!Thread.currentThread().isInterrupted()) {
@@ -471,19 +648,20 @@ System.out.println(respTerm.getName());
 				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.ANNOTATIONSOUT));
 				String protocol = tuple.getData().toArray()[1].toString();
 				
-				// TODO: Logging action
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard Annotation message received.",
+							LogType.INFO,
+							ComponentList.LOG));
+				}
 				
 				// prepare the new message to be sent
 				receiveBLBMessage(
 						protocol, 
-						ComponentList.ANNOTATIONS);
-				
+						ComponentList.ANNOTATIONS);		
 			}
-			
-			// TODO: Logging action
-
-		}
-		
+		}		
 	}	
 
 	/**
@@ -500,10 +678,16 @@ System.out.println(respTerm.getName());
 		
 		/**
 		 * 
+		 */
+		private boolean verbose;
+		
+		/**
+		 * 
 		 * @param blackboard
 		 */
 		public ParseBlackboardTermsRead(
-				IBlackboard blackboard) {
+				IBlackboard blackboard,
+				boolean verbose) {
 			this.blackboard = blackboard;
 			
 		}
@@ -511,8 +695,13 @@ System.out.println(respTerm.getName());
 		@Override
 		public void run() {
 
-			// TODO: Logging action
-			
+			// log action
+			if (this.verbose) {
+				blackboardOutgoingQueue.add(new LogIngoing( 
+						"[" + this.getClass().getName() + "]: Blackboard Terms Read Thread has started.",
+						LogType.INFO,
+						ComponentList.LOG));
+			}
 			
 			// Infinite loop
 			while (!Thread.currentThread().isInterrupted()) {
@@ -521,19 +710,20 @@ System.out.println(respTerm.getName());
 				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.TERMSOUT));
 				String protocol = tuple.getData().toArray()[1].toString();
 				
-				// TODO: Logging action
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard Terms message received.",
+							LogType.INFO,
+							ComponentList.LOG));
+				}
 				
 				// prepare the new message to be sent
 				receiveBLBMessage(
 						protocol, 
-						ComponentList.TERMS);
-				
+						ComponentList.TERMS);	
 			}
-			
-			// TODO: Logging action
-
 		}
-		
 	}	
 
 	/**
@@ -570,9 +760,7 @@ System.out.println(respTerm.getName());
 					
 					// send this message to blackboard
 					sendBLBMessage(outgoingQueue.poll());
-									
-					// TODO: log action
-					
+								
 					// wait for 5 seconds
 					try {
 						Thread.sleep(5000);
@@ -582,7 +770,6 @@ System.out.println(respTerm.getName());
 					}
 				}
 			}
-
 		}
 
 	}

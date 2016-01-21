@@ -1,17 +1,16 @@
 package pt.main;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.Observable;
 import java.util.Observer;
 
-import org.eclipse.jetty.webapp.MetaData;
-
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import pt.ma.component.proxy.network.Interface;
 import pt.ma.component.proxy.network.Message;
 import pt.ma.component.proxy.network.MessageType;
+import pt.ma.metadata.MetaData;
 import pt.ma.util.FileWork;
 
 /**
@@ -82,10 +81,18 @@ public class AnalyserDebug implements Observer {
 				Message message = (Message) arg1;
 
 				// just print out the return message
+				Gson gson = new Gson();
 				byte[] body = message.getBody();
-				String jsonBody = new String(body);
-				System.out.println(jsonBody);
-
+				MetaData metaData = gson.fromJson(new String(body), MetaData.class); 
+				
+				File file = new File("C:\\Users\\Bruno\\PEIWorkplace\\MetadataAnalyser-master\\metadata-files\\parse-results\\" + metaData.getUniqueID().toString() + ".txt");
+				FileOutputStream stream = new FileOutputStream(file);
+				try {
+				    stream.write(body);
+				} finally {
+				    stream.close();
+				}
+				
 			} catch (Exception e) {
 
 			}
