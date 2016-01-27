@@ -18,10 +18,12 @@ import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.CalculusDelegateOutgoing;
 import pt.blackboard.protocol.CalculusReadyOutgoing;
+import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.OWLReadyOutgoing;
 import pt.blackboard.protocol.ParseReadyOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
+import pt.ma.component.log.LogType;
 import pt.ma.exception.InactiveJobException;
 import pt.ma.metadata.MetaAnnotation;
 import pt.ma.metadata.MetaClass;
@@ -73,15 +75,30 @@ public class CalculusObject extends DSL {
 		// set blackboard outgoing messages queue
 		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
 
+		// log action
+		if (this.verbose) {
+			String logmsg = "[" + this.getClass().getName() + "]: Component has started";
+			LogIngoing protocol = new LogIngoing( 
+					logmsg,
+					LogType.INFO,
+					ComponentList.LOG);
+			blackboardOutgoingQueue.add(protocol);
+		}
+
 		// open threads for reading from blackboard
-		new Thread(new ParseBlackboardParseRead(this.blackboard)).start();
-		new Thread(new ParseBlackboardOWLRead(this.blackboard)).start();
+		new Thread(new ParseBlackboardParseRead(
+				this.blackboard, 
+				this.verbose)).start();
+		new Thread(new ParseBlackboardOWLRead(
+				this.blackboard, 
+				this.verbose)).start();
 		
 		// open a thread to check job completeness
 		new Thread(new ParseProcessJobList(
 				this.blackboard,
 				this.metadataActiveJobs,
-				this.blackboardOutgoingQueue)).start();
+				this.blackboardOutgoingQueue, 
+				this.verbose)).start();
 		
 		// open a thread for writing to the blackboard
 		new Thread(new ParseBlackboardWrite(
@@ -111,13 +128,30 @@ public class CalculusObject extends DSL {
 					ParseReadyOutgoing protocolParse = gson.fromJson(
 							message, 
 							ParseReadyOutgoing.class);
+					
+					// log action
+					if (this.verbose) {
+						blackboardOutgoingQueue.add(new LogIngoing( 
+								"[" + this.getClass().getName() + "]: Blackboard message received " + 
+										"from PARSE component, for Job ID: " + protocolParse.getUniqueID() + 
+										". About to initiate CALCULUS parsing process." + 
+										"to Client.",
+								LogType.INFO,
+								ComponentList.LOG));
+					}
+					
+					// start calculation process for this request
 					parseParseRequest(
 							protocolParse.getUniqueID(),
 							protocolParse.getBody());
 					
 				} catch (InactiveJobException e) {
-					// TODO log action
-
+					// log action
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: An error as occured parsing a " + 
+							"PARSE blackboard component message. Error: " + e.getMessage(),
+							LogType.ERROR,
+							ComponentList.LOG));
 				}
 				break;
 				
@@ -127,18 +161,42 @@ public class CalculusObject extends DSL {
 					OWLReadyOutgoing protocolOWL = gson.fromJson(
 							message, 
 							OWLReadyOutgoing.class);
+					
+					// log action
+					if (this.verbose) {
+						blackboardOutgoingQueue.add(new LogIngoing( 
+								"[" + this.getClass().getName() + "]: Blackboard message received " + 
+										"from OWL component, for Job ID: " + protocolOWL.getUniqueID() + 
+										"." + 
+										"to Client.",
+								LogType.INFO,
+								ComponentList.LOG));
+					}
+					
+					// start OWL response parsing
 					parseOWLResponse(
 							protocolOWL.getUniqueID(), 
 							protocolOWL.getBody());
 					
 				} catch (InactiveJobException e) {
-					// TODO log action
-
+					// log action
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: An error as occured parsing a " + 
+							"OWL blackboard component message. Error: " + e.getMessage(),
+							LogType.ERROR,
+							ComponentList.LOG));
 				}				
 				break;
 			
 			default:
-				// TODO: something's wrong
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard message received " + 
+									"is not possible to determine source COMPONENT.",
+							LogType.ERROR,
+							ComponentList.LOG));
+				}
 				break;
 		}
 
@@ -155,25 +213,39 @@ public class CalculusObject extends DSL {
 		switch (protocol.getComponentTarget()) {
 		
 			case OWL:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to OWL Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+				
 				// blackboard message to owl component
 				message = gson.toJson((CalculusDelegateOutgoing)protocol);
 				blackboard.put(Tuple(TupleKey.OWLIN, message));
-				
-				// TODO: log action
-				
 				break;
 				
 			case PROXY:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to PROXY Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+
 				// blackboard message to proxy component
 				message = gson.toJson((CalculusReadyOutgoing)protocol);
 				blackboard.put(Tuple(TupleKey.PROXYIN, message));
-				
-				// TODO: log action
-				
 				break;
 
 			default:
-				// TODO: log action
+				// log action
+				message = gson.toJson((LogIngoing)protocol);
+				blackboard.put(Tuple(TupleKey.LOGIN, message));
 				break;
 		}
 
@@ -211,8 +283,6 @@ public class CalculusObject extends DSL {
 
 		}
 		
-		// TODO: log action
-
 	}
 	
 	/**
@@ -225,7 +295,7 @@ public class CalculusObject extends DSL {
 			UUID jobUUID, 
 			MetaClass respClass) throws InactiveJobException {
 		
-		// retreive metadata instance from active job
+		// retrieve metadata instance from active job
 		if (!metadataActiveJobs.containsKey(jobUUID)) {
 			throw new InactiveJobException(
 					"CalculusObject:parseOWLResponse - Invalid Job UUID: " 
@@ -233,7 +303,14 @@ public class CalculusObject extends DSL {
 		}
 		CalculusJob jobActive = metadataActiveJobs.get(jobUUID);
 		
-		// TODO: log action
+		// log action
+		if (this.verbose) {
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: About to parse OWL component response, " + 
+					"for Job ID: " + jobUUID + ", regarding Class Name: " + respClass.getClassName(),
+					LogType.INFO,
+					ComponentList.LOG));
+		}
 		
 		// collect the specificity value from OWL response
 		MetaClass metaClass = setMetaClassAnnotationsSpecValues(
@@ -250,6 +327,16 @@ public class CalculusObject extends DSL {
 		setMetaClassCovValue(
 				jobUUID, 
 				metaClass);
+		
+		// log action
+		if (this.verbose) {
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: Calculus completed for Class Name: " + 
+					respClass.getClassName() + ", Average Specificity: " + metaClass.getSpecValue() + 
+					", Coverage Value: " + metaClass.getCovValue(),
+					LogType.INFO,
+					ComponentList.LOG));
+		}
 		
 		// remove this class reference from job list
 		jobActive.completeJobTask(metaClass);
@@ -292,13 +379,8 @@ public class CalculusObject extends DSL {
 				}
 				metaClass = itemClass;
 				classFound = true;
-				
-				// TODO: log action
-				
 			}
-			
 		}
-		
 		//
 		return metaClass;
 	}
@@ -325,14 +407,13 @@ public class CalculusObject extends DSL {
 				// no value was found for this annotation, so this one will not 
 				// be considered for class specificity calculation
 				offsetAnnotations.add(metaAnnotation);
-
-				// TODO: log action
-				
 			}
 		}
 		
 		// set denominator specificity value
-		int specDenominator = (metaClass.getMetaAnnotations().size() - offsetAnnotations.size());
+		int specDenominator = (
+				metaClass.getMetaAnnotations().size() - 
+				offsetAnnotations.size());
 		
 		// calculate average specificity value for this class
 		if (avgClassSpec > 0 && specDenominator > 0) {
@@ -345,8 +426,6 @@ public class CalculusObject extends DSL {
 			
 		}
 		metaClass.setSpecValue(avgClassSpec);
-		
-		// TODO: log action
 		
 	}
 
@@ -369,8 +448,6 @@ public class CalculusObject extends DSL {
 		}
 		metaClass.setCovValue(avgCovValue);			
 		
-		// TODO: log action
-		
 	}
 
 	// PRIVATE CLASSES
@@ -389,19 +466,31 @@ public class CalculusObject extends DSL {
 		
 		/**
 		 * 
+		 */
+		private boolean verbose;
+		
+		/**
+		 * 
 		 * @param blackboard
 		 */
 		public ParseBlackboardParseRead(
-				IBlackboard blackboard) {
+				IBlackboard blackboard,
+				boolean verbose) {
 			this.blackboard = blackboard;
+			this.verbose = verbose;
 			
 		}
 
 		@Override
 		public void run() {
 
-			// TODO: Logging action
-			
+			// log action
+			if (this.verbose) {
+				blackboardOutgoingQueue.add(new LogIngoing( 
+						"[" + this.getClass().getName() + "]: Blackboard PARSE Read Thread has started.",
+						LogType.INFO,
+						ComponentList.LOG));
+			}			
 			
 			// Infinite loop
 			while (!Thread.currentThread().isInterrupted()) {
@@ -410,7 +499,13 @@ public class CalculusObject extends DSL {
 				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.PARSEOUT));
 				String protocol = tuple.getData().toArray()[1].toString();
 				
-				// TODO: Logging action
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard Parse message received.",
+							LogType.INFO,
+							ComponentList.LOG));
+				}
 				
 				// process request sent from parse component
 				receiveBLBMessage(
@@ -418,9 +513,6 @@ public class CalculusObject extends DSL {
 						ComponentList.PARSE);
 				
 			}
-			
-			// TODO: Logging action
-
 		}
 	}	
 	
@@ -438,19 +530,31 @@ public class CalculusObject extends DSL {
 		
 		/**
 		 * 
+		 */
+		private boolean verbose;
+		
+		/**
+		 * 
 		 * @param blackboard
 		 */
 		public ParseBlackboardOWLRead(
-				IBlackboard blackboard) {
+				IBlackboard blackboard, 
+				boolean verbose) {
 			this.blackboard = blackboard;
+			this.verbose = verbose;
 			
 		}
 
 		@Override
 		public void run() {
 
-			// TODO: Logging action
-			
+			// log action
+			if (this.verbose) {
+				blackboardOutgoingQueue.add(new LogIngoing( 
+						"[" + this.getClass().getName() + "]: Blackboard OWL Read Thread has started.",
+						LogType.INFO,
+						ComponentList.LOG));
+			}
 			
 			// Infinite loop
 			while (!Thread.currentThread().isInterrupted()) {
@@ -459,7 +563,13 @@ public class CalculusObject extends DSL {
 				Tuple tuple = this.blackboard.get(MatchTuple(TupleKey.OWLOUT));
 				String protocol = tuple.getData().toArray()[1].toString();
 				
-				// TODO: Logging action
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: Blackboard OWL message received.",
+							LogType.INFO,
+							ComponentList.LOG));
+				}
 				
 				// process request sent from owl component
 				receiveBLBMessage(
@@ -467,9 +577,6 @@ public class CalculusObject extends DSL {
 						ComponentList.OWL);
 				
 			}
-			
-			// TODO: Logging action
-
 		}
 	}
 	
@@ -497,18 +604,24 @@ public class CalculusObject extends DSL {
 		
 		/**
 		 * 
+		 */
+		private boolean verbose;
+		
+		/**
+		 * 
 		 * @param blackboard
 		 * @param outgoingQueue
 		 */
 		public ParseProcessJobList(
 				IBlackboard blackboard, 
 				Map<UUID, CalculusJob> metadataActiveJobs,
-				Queue<MessageProtocol> outgoingQueue) {
+				Queue<MessageProtocol> outgoingQueue,
+				boolean verbose) {
 			
 			this.blackboard = blackboard;
 			this.metadataActiveJobs = metadataActiveJobs;
 			this.outgoingQueue = outgoingQueue;
-			
+			this.verbose = verbose;
 		}
 
 		@Override
@@ -526,11 +639,15 @@ public class CalculusObject extends DSL {
 						
 						// get all meta data file information gathered
 						MetaData metaData = activeJob.getMetaData();
-System.out.println(metaData);
 						
-						// TODO: log action
-						
-						
+						// log action
+						if (this.verbose) {
+							blackboardOutgoingQueue.add(new LogIngoing( 
+									"[" + this.getClass().getName() + "]: Calculus Job ID: " + entry.getKey() + "is complet.",
+									LogType.INFO,
+									ComponentList.LOG));
+						}
+											
 						// send a blackboard message to calculus component
 						CalculusReadyOutgoing protocol = new CalculusReadyOutgoing(
 								entry.getKey(), 
@@ -552,8 +669,6 @@ System.out.println(metaData);
 					metadataActiveJobs.remove(entry);
 				}
 				
-				// TODO: log action
-				
 				// wait for 5 seconds
 				try {
 					Thread.sleep(5000);
@@ -562,7 +677,6 @@ System.out.println(metaData);
 					
 				}
 			}
-
 		}
 
 	}

@@ -18,7 +18,7 @@ import pt.ma.util.FileWork;
  * @author
  *
  */
-public class AnalyserDebug implements Observer {
+public class AnalyserClient implements Observer {
 
 	/**
 	 * 
@@ -41,7 +41,7 @@ public class AnalyserDebug implements Observer {
 	 */
 	public static void main(String[] args) {
 		//
-		AnalyserDebug analyser = new AnalyserDebug(VERBOSE);
+		AnalyserClient analyser = new AnalyserClient(VERBOSE);
 
 	}
 
@@ -49,7 +49,7 @@ public class AnalyserDebug implements Observer {
 	 * 
 	 * @param versbose
 	 */
-	public AnalyserDebug(boolean versbose) {
+	public AnalyserClient(boolean versbose) {
 
 		//
 		network = new Interface(this, TCP_PORT, versbose);

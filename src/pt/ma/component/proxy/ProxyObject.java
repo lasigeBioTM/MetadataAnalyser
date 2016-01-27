@@ -36,7 +36,7 @@ public class ProxyObject extends DSL implements Observer {
 	/**
 	 * 
 	 */
-	private final int TCP_PORT = 8000;
+	private final int SOURCE_PORT = 8000;
 	
 	/**
 	 * 
@@ -106,7 +106,7 @@ public class ProxyObject extends DSL implements Observer {
 		// open network interface
 		network = new Interface(
 				this, 
-				TCP_PORT, 
+				SOURCE_PORT, 
 				this.verbose);
 	}
 	
