@@ -1,0 +1,211 @@
+{
+  "id": "MTBLS10",
+  "uniqueID": "e6928dfb-5740-44bb-96d5-e242d3b13fc2",
+  "checkSum": "904416824afc18f1668ee34206c9a952c4bd523c",
+  "parseDate": 1453388163438,
+  "parseDuration": 0,
+  "ontologies": [
+    {
+      "id": "ONTO_0",
+      "uri": "http://data.bioontology.org/ontologies/MS"
+    },
+    {
+      "id": "ONTO_1",
+      "uri": "http://data.bioontology.org/ontologies/NCBITAXON"
+    },
+    {
+      "id": "ONTO_2",
+      "uri": "http://data.bioontology.org/ontologies/EFO"
+    },
+    {
+      "id": "ONTO_3",
+      "uri": "http://data.bioontology.org/ontologies/CHMO"
+    },
+    {
+      "id": "ONTO_4",
+      "uri": "http://data.bioontology.org/ontologies/BTO"
+    },
+    {
+      "id": "ONTO_5",
+      "uri": "http://data.bioontology.org/ontologies/UO"
+    },
+    {
+      "id": "ONTO_6",
+      "uri": "http://data.bioontology.org/ontologies/OBI"
+    }
+  ],
+  "metaClasses": [
+    {
+      "id": "Design_1",
+      "uniqueID": "11f53c24-0165-4201-a7cf-f139dddc0e98",
+      "name": "Design",
+      "specValue": 0.946725,
+      "covValue": 0.6666666666666666,
+      "metaAnnotations": [
+        {
+          "id": "ANNO_0",
+          "uniqueID": "233a21d4-6e47-4444-a801-94a07ed6d3e9",
+          "uri": "http://www.ebi.ac.uk/efo/EFO_0001779",
+          "specValue": 1.0
+        },
+        {
+          "id": "ANNO_1",
+          "uniqueID": "b209aebe-4e32-41ea-a222-7ed3933391aa",
+          "uri": "http://www.ebi.ac.uk/efo/EFO_0001760",
+          "specValue": 1.0
+        },
+        {
+          "id": "ANNO_2",
+          "uniqueID": "f09d565b-3a9a-4b04-84c6-120c8c1a5ca3",
+          "uri": "http://purl.obolibrary.org/obo/OBI_0200196",
+          "specValue": 1.0
+        },
+        {
+          "id": "ANNO_3",
+          "uniqueID": "83064604-e9c5-4348-9341-0415bd3802e0",
+          "uri": "http://purl.obolibrary.org/obo/CHMO_0000796",
+          "specValue": 0.7869
+        }
+      ],
+      "metaTerms": [
+        {
+          "id": "TERM_0",
+          "uniqueId": "fbda7ff5-8fa5-4f44-a444-9223dcfcb218",
+          "name": "time series design"
+        },
+        {
+          "id": "TERM_1",
+          "uniqueId": "9370c524-e77d-4648-a8b8-9f5b6ecc495c",
+          "name": "injury design"
+        },
+        {
+          "id": "TERM_2",
+          "uniqueId": "f12b9971-dfa2-4eaf-983e-8e157c577b81",
+          "name": "Plant metabolomics"
+        },
+        {
+          "id": "TERM_3",
+          "uniqueId": "eee2dab0-066c-4163-a414-c39847b02689",
+          "name": "correlation study objective"
+        },
+        {
+          "id": "TERM_4",
+          "uniqueId": "ab8fee36-78c8-483f-a92c-9d7d9f85bb96",
+          "name": "targeted metabolites"
+        },
+        {
+          "id": "TERM_5",
+          "uniqueId": "a2d7ed82-4c18-4ef5-8a9f-e995cfa7c919",
+          "name": "high-performance liquid chromatography-mass spectrometry"
+        }
+      ]
+    },
+    {
+      "id": "Factor_1",
+      "uniqueID": "c1cc4e14-385f-4b1b-8747-8a8d94a9959d",
+      "name": "Factor",
+      "specValue": 0.9459500000000001,
+      "covValue": 1.0,
+      "metaAnnotations": [
+        {
+          "id": "ANNO_0",
+          "uniqueID": "31ea5aba-7737-4cfd-a876-83dd8c8137f8",
+          "uri": "http://www.ebi.ac.uk/efo/EFO_0000724",
+          "specValue": 0.8919
+        },
+        {
+          "id": "ANNO_1",
+          "uniqueID": "d370e244-0895-4b01-bc34-67689853b0b6",
+          "uri": "http://purl.obolibrary.org/obo/GO_0009611",
+          "specValue": 1.0
+        }
+      ],
+      "metaTerms": [
+        {
+          "id": "TERM_0",
+          "uniqueId": "57a91f7c-43fd-46ed-8a2a-06a6b2a7eae1",
+          "name": "timepoint"
+        },
+        {
+          "id": "TERM_1",
+          "uniqueId": "c88b5894-77cb-44e6-9d5d-729633c3556b",
+          "name": "response to wounding"
+        }
+      ]
+    },
+    {
+      "id": "Assay_1",
+      "uniqueID": "f3bc162f-4d3c-4b5f-887b-156d7d83c789",
+      "name": "Assay",
+      "specValue": 0.9642999999999999,
+      "covValue": 1.0,
+      "metaAnnotations": [
+        {
+          "id": "ANNO_0",
+          "uniqueID": "c5c3dadc-23d4-40bd-94b8-b4e7b19b525e",
+          "uri": "http://purl.obolibrary.org/obo/OBI_0000366",
+          "specValue": 1.0
+        },
+        {
+          "id": "ANNO_1",
+          "uniqueID": "3270e43b-df27-448d-8208-c8db531d4905",
+          "uri": "http://purl.obolibrary.org/obo/OBI_0000470",
+          "specValue": 0.9286
+        }
+      ],
+      "metaTerms": [
+        {
+          "id": "TERM_0",
+          "uniqueId": "011abafd-ded0-40fa-b649-78b7c393e581",
+          "name": "metabolite profiling"
+        },
+        {
+          "id": "TERM_1",
+          "uniqueId": "3c5bdd48-0711-424d-b925-209c0fac2288",
+          "name": "mass spectrometry"
+        }
+      ]
+    },
+    {
+      "id": "Protocol_1",
+      "uniqueID": "9fe2243b-4a84-49d7-81b1-53074d1dfccf",
+      "name": "Protocol",
+      "specValue": 0.0,
+      "covValue": 0.0,
+      "metaAnnotations": [],
+      "metaTerms": [
+        {
+          "id": "TERM_0",
+          "uniqueId": "cdd67d20-9ab6-4d71-9204-cf59a7a8aceb",
+          "name": "Sample collection"
+        },
+        {
+          "id": "TERM_1",
+          "uniqueId": "20fcade3-0bf1-4afb-a34a-dafb7a668136",
+          "name": "Extraction"
+        },
+        {
+          "id": "TERM_2",
+          "uniqueId": "ba4c26bc-fab2-49bd-bb59-afcc419a380e",
+          "name": "Chromatography"
+        },
+        {
+          "id": "TERM_3",
+          "uniqueId": "acbd30d7-6ca2-4f92-b26b-6324ca5c860d",
+          "name": "Mass spectrometry"
+        },
+        {
+          "id": "TERM_4",
+          "uniqueId": "d0849be4-df77-4c63-b4be-b72f70ecbd9d",
+          "name": "Data transformation"
+        },
+        {
+          "id": "TERM_5",
+          "uniqueId": "3679da2a-a3e3-4ddf-866f-f572037b2f2b",
+          "name": "Metabolite identification"
+        }
+      ]
+    }
+  ],
+  "parseObjective": "METADATAANALYSIS"
+}

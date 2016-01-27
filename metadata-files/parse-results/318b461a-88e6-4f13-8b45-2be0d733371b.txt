@@ -1,0 +1,167 @@
+{
+  "id": "MTBLS100",
+  "uniqueID": "318b461a-88e6-4f13-8b45-2be0d733371b",
+  "checkSum": "a65b583ee252b5db72bc651deae30329e6e35973",
+  "parseDate": 1453388148345,
+  "parseDuration": 0,
+  "ontologies": [
+    {
+      "id": "ONTO_0",
+      "uri": "http://data.bioontology.org/ontologies/OBI"
+    },
+    {
+      "id": "ONTO_1",
+      "uri": "http://data.bioontology.org/ontologies/NCBITAXON"
+    },
+    {
+      "id": "ONTO_2",
+      "uri": "http://data.bioontology.org/ontologies/BTO"
+    },
+    {
+      "id": "ONTO_3",
+      "uri": "http://data.bioontology.org/ontologies/IDODEN"
+    },
+    {
+      "id": "ONTO_4",
+      "uri": "http://data.bioontology.org/ontologies/UO"
+    },
+    {
+      "id": "ONTO_5",
+      "uri": "http://data.bioontology.org/ontologies/NMR"
+    }
+  ],
+  "metaClasses": [
+    {
+      "id": "Design_1",
+      "uniqueID": "e3beaf5f-10fe-4980-8e7a-d0f196ecac16",
+      "name": "Design",
+      "specValue": 1.0,
+      "covValue": 1.0,
+      "metaAnnotations": [
+        {
+          "id": "ANNO_0",
+          "uniqueID": "64ff8b1f-8a16-47f6-96fe-b6c51cc432b6",
+          "uri": "http://nmrML.org/nmrCV#NMR:1400183",
+          "specValue": -1.0
+        },
+        {
+          "id": "ANNO_1",
+          "uniqueID": "f47eb578-a959-48b2-a30a-66546ff67557",
+          "uri": "http://purl.obolibrary.org/obo/BTO_0001202",
+          "specValue": 1.0
+        }
+      ],
+      "metaTerms": [
+        {
+          "id": "TERM_0",
+          "uniqueId": "0afb2ea5-71af-450a-82ae-cd48d9f11c1d",
+          "name": "NMR spectrum"
+        },
+        {
+          "id": "TERM_1",
+          "uniqueId": "87c94266-3258-4253-9c96-104c1d75a87c",
+          "name": "saliva"
+        }
+      ]
+    },
+    {
+      "id": "Factor_1",
+      "uniqueID": "0e103ff0-8152-44b6-bd3c-48d30bbb309f",
+      "name": "Factor",
+      "specValue": 0.0,
+      "covValue": 0.0,
+      "metaAnnotations": [],
+      "metaTerms": [
+        {
+          "id": "TERM_0",
+          "uniqueId": "1ff3a743-7b92-46e4-8d44-3d07967bb3cc",
+          "name": "control"
+        }
+      ]
+    },
+    {
+      "id": "Assay_1",
+      "uniqueID": "63e79a8d-bab2-4220-aaae-492953b2440e",
+      "name": "Assay",
+      "specValue": 1.0,
+      "covValue": 1.0,
+      "metaAnnotations": [
+        {
+          "id": "ANNO_0",
+          "uniqueID": "8a0f401d-3d82-4d4f-9b83-1bd52159e0cd",
+          "uri": "http://purl.obolibrary.org/obo/OBI_0000366",
+          "specValue": 1.0
+        },
+        {
+          "id": "ANNO_1",
+          "uniqueID": "37b37910-4ea2-4fcc-bd17-3fd0640c18dc",
+          "uri": "http://purl.obolibrary.org/obo/OBI_0000623",
+          "specValue": 1.0
+        }
+      ],
+      "metaTerms": [
+        {
+          "id": "TERM_0",
+          "uniqueId": "c157fe99-3bda-44ec-85a9-83563299168b",
+          "name": "metabolite profiling"
+        },
+        {
+          "id": "TERM_1",
+          "uniqueId": "e75bd43b-ba70-4bd9-b40b-e59be7f3db72",
+          "name": "NMR spectroscopy"
+        }
+      ]
+    },
+    {
+      "id": "Protocol_1",
+      "uniqueID": "53da4f40-77da-4930-a17a-781722a296b2",
+      "name": "Protocol",
+      "specValue": 0.0,
+      "covValue": 0.0,
+      "metaAnnotations": [],
+      "metaTerms": [
+        {
+          "id": "TERM_0",
+          "uniqueId": "75ff584e-cb73-46b1-9d84-2f85a8492a6e",
+          "name": "Sample collection"
+        },
+        {
+          "id": "TERM_1",
+          "uniqueId": "8704a894-8152-4497-afd9-381ceabf7b87",
+          "name": "Extraction"
+        },
+        {
+          "id": "TERM_2",
+          "uniqueId": "b3cef184-92ad-485a-a083-9320ea299090",
+          "name": "NMR sample"
+        },
+        {
+          "id": "TERM_3",
+          "uniqueId": "441bd181-b6c6-43d3-a5cd-8e20b9c59975",
+          "name": "NMR spectroscopy"
+        },
+        {
+          "id": "TERM_4",
+          "uniqueId": "d4d1b576-912d-436e-8db7-847d93be0371",
+          "name": "NMR assay"
+        },
+        {
+          "id": "TERM_5",
+          "uniqueId": "f4c955cb-30f0-489f-9b46-1fabea0a9f9d",
+          "name": "Data transformation"
+        },
+        {
+          "id": "TERM_6",
+          "uniqueId": "6cbd1806-f832-45a1-bad1-7518f08dde80",
+          "name": "Metabolite identification"
+        },
+        {
+          "id": "TERM_7",
+          "uniqueId": "330c85a1-eaab-43de-86c8-51d3438d57f6",
+          "name": "Deproteinization "
+        }
+      ]
+    }
+  ],
+  "parseObjective": "METADATAANALYSIS"
+}
