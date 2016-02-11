@@ -519,8 +519,9 @@ public class ParseObject extends DSL {
 			byte[] body) {
 
 		// build stub metadata object
+		String defaultStudyId = "MetoboLightsConcept";
 		MetaData metaData = new MetaData(
-				null,
+				defaultStudyId,
 				jobUUID,
 				CLASS_DEFAULT,
 				MetaObjective.CONCEPTANALYSIS);		

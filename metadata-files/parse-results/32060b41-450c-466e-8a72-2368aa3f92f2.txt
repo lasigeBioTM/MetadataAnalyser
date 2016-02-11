@@ -1,20 +1,20 @@
 {
-  "uniqueID": "dc1dcf65-6e07-4edf-92f3-501839dc7f94",
+  "uniqueID": "32060b41-450c-466e-8a72-2368aa3f92f2",
   "checkSum": "0e65456197af7b8dd5f153880437e0139d40a17c",
-  "parseDate": 1455054984654,
-  "parseDuration": 18322,
+  "parseDate": 1455189594760,
+  "parseDuration": 30946,
   "ontologies": [],
   "metaClasses": [
     {
       "id": "Default_1",
-      "uniqueID": "85e58427-bc2b-40a9-803c-f9d777d9dec7",
+      "uniqueID": "0ff22f40-854c-4640-aff5-e38fa1227bcf",
       "name": "Default",
       "specValue": 0.7869,
       "covValue": 0.0,
       "metaAnnotations": [
         {
           "id": "DEFAULT_1",
-          "uniqueID": "a4b74312-7d27-4fa1-8bb6-6e54447c6aac",
+          "uniqueID": "10a93588-9b5e-49f7-a268-679872eee6a2",
           "uri": "http://purl.obolibrary.org/obo/CHMO_0000796",
           "specValue": 0.7869
         }
