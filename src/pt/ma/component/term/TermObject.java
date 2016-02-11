@@ -12,17 +12,20 @@ import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.AnnotationsOutgoing;
+import pt.blackboard.protocol.DigestReady;
 import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.ParseDelegateOutgoing;
 import pt.blackboard.protocol.TermsOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
 import pt.ma.component.log.LogType;
+import pt.ma.component.parse.RepositoryType;
 import pt.ma.component.parse.interfaces.IMetaTerms;
 import pt.ma.component.parse.metabolights.ParseTermsMetaboLights;
 import pt.ma.metadata.MetaClass;
 import pt.ma.metadata.MetaData;
 import pt.ma.metadata.MetaTerm;
+import pt.ma.util.StringWork;
 
 /**
  * 
@@ -100,11 +103,10 @@ public class TermObject extends DSL {
 			case PARSE:
 				try {
 					// message sent from Proxy component
+					DigestReady digestProtocol = null;
 					ParseDelegateOutgoing protocolProxy = gson.fromJson(
 							message, 
 							ParseDelegateOutgoing.class);
-					List<MetaClass> bodyClasses = protocolProxy.getMetaClasses();
-					byte[] bodyParse = protocolProxy.getBody();
 					switch (protocolProxy.getRequestType()) {
 					
 						case CONCEPTANALYSIS:
@@ -121,8 +123,18 @@ public class TermObject extends DSL {
 							// an hole metadata file analysis 
 							parseMetadataFile(
 									protocolProxy.getUniqueID(),
-									bodyClasses,
-									bodyParse);
+									protocolProxy.getMetaClasses(),
+									protocolProxy.getBody(),
+									protocolProxy.getRepositoryType());
+							
+							// build a digest blackboard message
+							digestProtocol = new DigestReady(
+									protocolProxy.getUniqueID(),
+									"[" + StringWork.getNowDate() + "] " +
+									"Concept Term Parsing has ended for Job ID: " + 
+											protocolProxy.getUniqueID(),
+									ComponentList.DIGEST); 
+							blackboardOutgoingQueue.add(digestProtocol);
 							break;
 							
 						case METADATAANALYSIS:
@@ -139,8 +151,18 @@ public class TermObject extends DSL {
 							// an hole metadata file analysis 
 							parseMetadataFile(
 									protocolProxy.getUniqueID(),
-									bodyClasses,
-									bodyParse);
+									protocolProxy.getMetaClasses(),
+									protocolProxy.getBody(),
+									protocolProxy.getRepositoryType());
+
+							// build a digest blackboard message
+							digestProtocol = new DigestReady(
+									protocolProxy.getUniqueID(),
+									"[" + StringWork.getNowDate() + "] " +
+									"Metadata Term Parsing has ended for Job ID: " + 
+											protocolProxy.getUniqueID(),
+									ComponentList.DIGEST); 
+							blackboardOutgoingQueue.add(digestProtocol);
 							break;
 							
 						default:
@@ -188,40 +210,55 @@ public class TermObject extends DSL {
 	private void parseMetadataFile(
 			UUID jobUUID, 
 			List<MetaClass> metaClasses,
-			byte[] body) {
+			byte[] body,
+			RepositoryType repository) {
 		
-		// TODO: Averiguar a hipóstese de saber que parser utilizar
-		
-		// parse terms for each meta class given
-		IMetaTerms parseTerms = new ParseTermsMetaboLights(body);
-		for (MetaClass metaClass: metaClasses) {
+		switch (repository) {
+			case METOBOLIGHTS:
+				// parse terms for each meta class given
+				IMetaTerms parseTerms = new ParseTermsMetaboLights(body);
+				for (MetaClass metaClass: metaClasses) {
 
-			// read all available terms for this meta class			
-			List<MetaTerm> terms = parseTerms.getMetaTerms(metaClass);
-			
-			// add all read new annotations to the meta class
-			metaClass.removeAllTerms();
-			for (MetaTerm term : terms) {
-				metaClass.addMetaTerm(term);	
-			}
-			
-			// log action
-			if (this.verbose) {
-				blackboardOutgoingQueue.add(new LogIngoing( 
-						"[" + this.getClass().getName() + "]: Parsing process for MetaClass: " + 
-						metaClass.getClassName() + " returned #" + terms.size() + " Terms, for Job ID: " + 
+					// read all available terms for this meta class			
+					List<MetaTerm> terms = parseTerms.getMetaTerms(metaClass);
+					
+					// add all read new annotations to the meta class
+					metaClass.removeAllTerms();
+					for (MetaTerm term : terms) {
+						metaClass.addMetaTerm(term);	
+					}
+					
+					// log action
+					if (this.verbose) {
+						blackboardOutgoingQueue.add(new LogIngoing( 
+								"[" + this.getClass().getName() + "]: Parsing process for MetaClass: " + 
+								metaClass.getClassName() + " returned #" + terms.size() + " Terms, for Job ID: " + 
+								jobUUID,
+								LogType.INFO,
+								ComponentList.LOG));
+					}						
+				}
+				
+				// send a blackboard message to parse component with the results
+				TermsOutgoing protocol = new TermsOutgoing(
 						jobUUID,
-						LogType.INFO,
-						ComponentList.LOG));
-			}						
+						metaClasses,
+						ComponentList.PARSE);
+				blackboardOutgoingQueue.add(protocol);
+				break;
+	
+			default:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: There isn't any repository type to analyse.",
+							LogType.ERROR,
+							ComponentList.LOG));
+				}				
+				break;
 		}
 		
-		// send a blackboard message to parse component with the results
-		TermsOutgoing protocol = new TermsOutgoing(
-				jobUUID,
-				metaClasses,
-				ComponentList.PARSE);
-		blackboardOutgoingQueue.add(protocol);
+
 	
 	}
 
@@ -234,6 +271,21 @@ public class TermObject extends DSL {
 		// send outgoing protocol message to the blackboard
 		Gson gson = new Gson(); String message = null;
 		switch (protocol.getComponentTarget()) {
+
+			case DIGEST:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to PROXY Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+	
+				// blackboard message to concepts component
+				message = gson.toJson((DigestReady)protocol);
+				blackboard.put(Tuple(TupleKey.PROXYDIGEST, message));				
+				break;
 		
 			case PARSE:
 				// log action

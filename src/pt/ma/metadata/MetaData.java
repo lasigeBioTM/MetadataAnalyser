@@ -3,6 +3,7 @@ package pt.ma.metadata;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,6 +58,16 @@ public class MetaData {
 	 * 
 	 */
 	private MetaObjective parseObjective;
+
+	/**
+	 * Specificity value for the entire class
+	 */
+	private double specValue;
+	
+	/**
+	 * Coverage value for the entire class
+	 */
+	private double covValue;
 
 	/**
 	 * 
@@ -165,6 +176,64 @@ public class MetaData {
 	}
 	
 	/**
+	 * @requires metaClassExists(name) == true
+	 * @param name
+	 * @return
+	 */
+	public MetaClass getMetaClass(String name) {
+		MetaClass result = null; boolean found = false;
+		Iterator<MetaClass> iterator = metaClasses.iterator();
+		while (!found && iterator.hasNext()) {
+			MetaClass metaClass = iterator.next();
+			if (metaClass.getClassName().toLowerCase().equals(name.toLowerCase()) ) {
+				result = metaClass;
+				found = true;
+			}
+		}
+		//
+		return result;
+	}
+
+	/**
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public boolean metaClassExists(String name) {
+		boolean result = false;
+		Iterator<MetaClass> iterator = metaClasses.iterator();
+		while (!result && iterator.hasNext()) {
+			MetaClass metaClass = iterator.next();
+			if (metaClass.getClassName().toLowerCase().equals(name.toLowerCase()) ) {
+				result = true;
+			}
+		}
+		//
+		return result;
+	}
+	
+	/**
+	 * 
+	 * @requires metaClassExists(className) == true 
+	 * @param concept
+	 * @param className
+	 */
+	public MetaAnnotation addConceptToClass(
+			String concept, 
+			String className) {
+		
+		// define a new annotation for the given class
+		String defaulName = "DEFAULT_1";
+		MetaClass metaClass = getMetaClass(className);
+		MetaAnnotation result = metaClass.addMetaAnnotation(
+				defaulName, 
+				concept);
+		
+		//
+		return result;
+	}
+	
+	/**
 	 * 
 	 * @return
 	 */
@@ -187,6 +256,46 @@ public class MetaData {
 	public String getCheckSum() {
 		return checkSum;
 	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public double getSpecValue() {
+		return specValue;
+	}
+
+	/**
+	 * 
+	 * @param specValue
+	 */
+	public void setSpecValue(double specValue) {
+		this.specValue = specValue;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public double getCovValue() {
+		return covValue;
+	}
+
+	/**
+	 * 
+	 * @param covValue
+	 */
+	public void setCovValue(double covValue) {
+		this.covValue = covValue;
+	}
+
+	/**
+	 * 
+	 * @param parseDuration
+	 */
+	public void setParseDuration(long currentTime) {
+		this.parseDuration = (currentTime - parseDate);
+	}
 
 	/**
 	 * 
@@ -206,28 +315,7 @@ public class MetaData {
 	}
 
 	@Override
-	public String toString() {		
-		/*
-		StringBuilder result = new StringBuilder();
-		result.append("--[MetaData Result: \n");
-		result.append("\tID: " + this.id + "\n");
-		result.append("\tUniqueID: " + this.uniqueID + "\n");
-		result.append("\tCheckSum: " + this.checkSum + "\n");
-		result.append("\tParseDate: " + this.parseDate + "\n");
-		result.append("\tParseDuration: " + this.parseDuration + " (miliseconds)\n");
-		result.append("\tOntologies: (" + this.ontologies.size() + ")" + "\n");
-		for (MetaOntology metaOntology : this.ontologies) {
-			result.append("\t\t" + metaOntology + "\n");	
-		}
-		result.append("\tClasses: (" + this.metaClasses.size() + ")" + "\n");
-		for (MetaClass metaClass : this.metaClasses) {
-			result.append("\t" + metaClass + "\n");	
-		}
-		result.append("]--");
-		//
-		return result.toString();
-		*/
-		
+	public String toString() {				
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String result = gson.toJson(this);
 		return result;

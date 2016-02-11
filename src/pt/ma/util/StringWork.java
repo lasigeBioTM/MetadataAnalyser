@@ -3,6 +3,9 @@ package pt.ma.util;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class StringWork {
 
@@ -40,5 +43,15 @@ public class StringWork {
 			hexStr += Integer.toString((digest[i] & 0xff) + 0x100, 16).substring(1);
 		}
 		return hexStr;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public static String getNowDate() {
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Calendar cal = Calendar.getInstance();
+		return dateFormat.format(cal.getTime());
 	}
 }

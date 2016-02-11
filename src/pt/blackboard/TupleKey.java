@@ -13,7 +13,8 @@ public enum TupleKey {
 	CALCULUSOUT(1010),
 	OWLIN(1011),
 	OWLOUT(1012),
-	LOGIN(1013);
+	LOGIN(1013),
+	PROXYDIGEST(1014);
 	
 	private final int value;
 

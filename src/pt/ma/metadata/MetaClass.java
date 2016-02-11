@@ -98,7 +98,21 @@ public class MetaClass implements Serializable {
 		return this;
 		
 	}
-	
+
+	/**
+	 * 
+	 * @param id
+	 * @param url
+	 * @return
+	 */
+	public MetaAnnotation addMetaAnnotation(String id, String url) {
+		//
+		MetaAnnotation metaAnnotation = new MetaAnnotation(id, url);
+		metaAnnotations.add(metaAnnotation);
+		//
+		return metaAnnotation;
+	}
+
 	/**
 	 * 
 	 * @param terms
@@ -117,7 +131,7 @@ public class MetaClass implements Serializable {
 		return metaAnnotations;
 		
 	}
-	
+		
 	/**
 	 * 
 	 */

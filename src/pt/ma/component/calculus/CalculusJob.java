@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import pt.blackboard.protocol.enums.RequestType;
 import pt.ma.metadata.MetaClass;
 import pt.ma.metadata.MetaData;
 
@@ -36,14 +37,24 @@ public class CalculusJob {
 	
 	/**
 	 * 
-	 * @param metaData
 	 */
-	public CalculusJob(MetaData metaData) {
+	private RequestType requestType;
+
+	/**
+	 * 
+	 * @param metaData
+	 * @param requestType
+	 */
+	public CalculusJob(
+			MetaData metaData, 
+			RequestType requestType) {
 		super();
 		//
 		this.jobID = UUID.randomUUID();
 		this.metaData = metaData;
 		this.taskSet = false;
+		this.requestType = requestType;
+		//
 		jobTaskList = new HashMap<UUID, MetaClass>();
 		
 	}
@@ -52,15 +63,19 @@ public class CalculusJob {
 	 * 
 	 * @param jobID
 	 * @param metaData
+	 * @param requestType
 	 */
 	public CalculusJob(
 			UUID jobID, 
-			MetaData metaData) {
+			MetaData metaData,
+			RequestType requestType) {
 		super();
 		//
 		this.jobID = jobID;
 		this.metaData = metaData;
 		this.taskSet = false;
+		this.requestType = requestType;
+		//
 		jobTaskList = new HashMap<UUID, MetaClass>();
 		
 	}
@@ -131,6 +146,22 @@ public class CalculusJob {
 	 */
 	public void setMetaData(MetaData metaData) {
 		this.metaData = metaData;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public RequestType getRequestType() {
+		return requestType;
+	}
+
+	/**
+	 * 
+	 * @param requestType
+	 */
+	public void setRequestType(RequestType requestType) {
+		this.requestType = requestType;
 	}
 
 }

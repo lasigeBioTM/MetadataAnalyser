@@ -2,6 +2,7 @@ package pt.main;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -54,7 +55,7 @@ public class AnalyserClient implements Observer {
 		//
 		network = new Interface(this, TCP_PORT, versbose);
 
-		for (int i = 1; i <= 2; i++) {
+/*		for (int i = 1; i <= 1; i++) {
 			//
 			try {
 				byte[] body = FileWork.readContentIntoByteArray(
@@ -62,7 +63,11 @@ public class AnalyserClient implements Observer {
 								+ "i_Investigation_" + i + ".txt"));
 
 				// build the tcp message to be sent
-				Message message = new Message("127.0.0.1", 8000, MessageType.TCPREQUEST, body);
+				Message message = new Message(
+						"127.0.0.1", 
+						8000, 
+						MessageType.TCPREQUESTMETADATA, 
+						body);
 				network.sendMessage(message);
 
 			} catch (Exception e) {
@@ -70,6 +75,15 @@ public class AnalyserClient implements Observer {
 			}
 
 		}
+*/	
+		String concept = "http://purl.obolibrary.org/obo/CHMO_0000796";
+		Message message = new Message(
+				"127.0.0.1", 
+				8000, 
+				MessageType.TCPREQUESTCONCEPT, 
+				concept.getBytes());
+		network.sendMessage(message);		
+
 	}
 
 	@Override
@@ -77,22 +91,39 @@ public class AnalyserClient implements Observer {
 		//
 		if (arg0 instanceof Interface) {
 			try {
-				// read the new network message
-				Message message = (Message) arg1;
-
-				// just print out the return message
 				Gson gson = new Gson();
-				byte[] body = message.getBody();
-				MetaData metaData = gson.fromJson(new String(body), MetaData.class); 
-				
-				File file = new File("C:\\Users\\Bruno\\PEIWorkplace\\MetadataAnalyser-master\\metadata-files\\parse-results\\" + metaData.getUniqueID().toString() + ".txt");
-				FileOutputStream stream = new FileOutputStream(file);
-				try {
-				    stream.write(body);
-				} finally {
-				    stream.close();
+
+				// read the new network message
+				byte[] body = null;
+				Message message = (Message) arg1;
+				switch (message.getType()) {
+					case TCPRESPONSE:
+						body = message.getBody();
+						MetaData metaData = gson.fromJson(new String(body), MetaData.class);	
+						File file = new File(
+								"C:\\Users\\Bruno\\PEIWorkplace\\MetadataAnalyser-master\\metadata-files\\parse-results\\"
+										+ metaData.getUniqueID().toString() + ".txt");
+						FileOutputStream stream = new FileOutputStream(file);
+						try {
+							stream.write(body);
+						} finally {
+							stream.close();
+						}
+						break;
+	
+					case TCPDIGEST:
+						body = message.getBody();
+						String filename= "C:\\Users\\Bruno\\PEIWorkplace\\MetadataAnalyser-master\\metadata-files\\parse-results\\digest.txt";
+					    FileWriter fw = new FileWriter(filename,true); //the true will append the new data
+					    fw.write(new String(body) + "\n");//appends the string to the file
+					    fw.close();
+						break;
+						
+					default:
+						break;
 				}
-				
+				// just print out the return message
+
 			} catch (Exception e) {
 
 			}

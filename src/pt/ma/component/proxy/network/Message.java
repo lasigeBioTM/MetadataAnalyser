@@ -49,6 +49,11 @@ public class Message implements Serializable {
 
     /**
      * 
+     */
+    private String targetRepository;
+    
+    /**
+     * 
      * @param uuid
      * @param sender
      * @param receiver
@@ -66,6 +71,35 @@ public class Message implements Serializable {
     	this.receiverTCPPort = receiverTCPPort;
     	this.type = type;
     	this.body = body;
+    	this.targetRepository = "0";
+    	
+    	//
+    	this.uuid = UUID.randomUUID();
+    	this.timestamp = System.currentTimeMillis();
+    	
+    }
+
+    /**
+     * 
+     * @param receiverTCPIP
+     * @param receiverTCPPort
+     * @param type
+     * @param body
+     * @param targetRepository
+     */
+    public Message( 
+    		String receiverTCPIP, 
+    		int receiverTCPPort,
+    		MessageType type, 
+    		byte[] body,
+    		String targetRepository) {
+    	
+    	//
+    	this.receiverTCPIP = receiverTCPIP;
+    	this.receiverTCPPort = receiverTCPPort;
+    	this.type = type;
+    	this.body = body;
+    	this.targetRepository = targetRepository;
     	
     	//
     	this.uuid = UUID.randomUUID();
@@ -151,6 +185,22 @@ public class Message implements Serializable {
 	 */
 	public byte[] getBody() {
 		return body;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getTargetRepository() {
+		return targetRepository;
+	}
+
+	/**
+	 * 
+	 * @param targetRepository
+	 */
+	public void setTargetRepository(String targetRepository) {
+		this.targetRepository = targetRepository;
 	}
 	
 }

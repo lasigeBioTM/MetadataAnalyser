@@ -32,4 +32,25 @@ public class FileWork {
 		return bFile;
 	}
 
+	/**
+	 * 
+	 * @param file
+	 * @return
+	 */
+	public static String readContentIntoString(File file) {
+		FileInputStream fileInputStream = null;
+		StringBuffer sFile = new StringBuffer();
+		try {
+			// convert file into string
+			fileInputStream = new FileInputStream(file);
+			int ch;
+			while( (ch = fileInputStream.read()) != -1) {
+				sFile.append((char)ch);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return sFile.toString();
+	}
 }

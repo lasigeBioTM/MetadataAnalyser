@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import pt.blackboard.protocol.enums.ComponentList;
 import pt.blackboard.protocol.enums.RequestType;
+import pt.ma.component.parse.RepositoryType;
 import pt.ma.metadata.MetaClass;
 
 /**
@@ -31,6 +32,11 @@ public class ParseDelegateOutgoing extends MessageProtocol {
 
 	/**
 	 * 
+	 */
+	private RepositoryType repository;
+	
+	/**
+	 * 
 	 * @param uniqueID
 	 * @param body
 	 * @param requestType
@@ -40,13 +46,14 @@ public class ParseDelegateOutgoing extends MessageProtocol {
 			List<MetaClass> metaClasses,
 			byte[] body, 
 			ComponentList target,
-			RequestType requestType) {
+			RequestType requestType,
+			RepositoryType repository) {
 		super(uniqueID, target);		
 		//
 		this.body = body;
 		this.requestType = requestType;
 		this.metaClasses = metaClasses;
-		
+		this.repository = repository;
 	}
 	
 	/**
@@ -71,6 +78,30 @@ public class ParseDelegateOutgoing extends MessageProtocol {
 	 */
 	public RequestType getRequestType() {
 		return requestType;
+	}
+
+	/**
+	 * 
+	 * @param requestType
+	 */
+	public void setRequestType(RequestType requestType) {
+		this.requestType = requestType;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public RepositoryType getRepositoryType() {
+		return repository;
+	}
+
+	/**
+	 * 
+	 * @param repository
+	 */
+	public void setRepositoryType(RepositoryType repository) {
+		this.repository = repository;
 	}
 
 }

@@ -18,6 +18,7 @@ import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.AnnotationsOutgoing;
+import pt.blackboard.protocol.DigestReady;
 import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.ParseDelegateOutgoing;
@@ -37,6 +38,7 @@ import pt.ma.metadata.MetaClass;
 import pt.ma.metadata.MetaData;
 import pt.ma.metadata.MetaObjective;
 import pt.ma.metadata.MetaTerm;
+import pt.ma.util.StringWork;
 
 /**
  * 
@@ -49,6 +51,11 @@ public class ParseObject extends DSL {
 	 * 
 	 */
 	private static final String[] CLASS_NAMES = {"Design", "Factor", "Assay", "Protocol"};
+	
+	/**
+	 * 
+	 */
+	private static final String[] CLASS_DEFAULT = {"Default"};
 	
 	/**
 	 * 
@@ -139,10 +146,10 @@ public class ParseObject extends DSL {
 			case PROXY:		
 				try {
 					// message sent from Proxy component
+					DigestReady digestProtocol = null;
 					ProxyDelegateOutgoing protocolProxy = gson.fromJson(
 							message, 
 							ProxyDelegateOutgoing.class);
-					byte[] bodyProxy = protocolProxy.getBody();
 					switch (protocolProxy.getRequestType()) {
 					
 						case CONCEPTANALYSIS:
@@ -158,9 +165,19 @@ public class ParseObject extends DSL {
 							}
 							
 							// an concept analysis only 
-							parseMetadataFile(
+							parseMetadataConcept(
 									protocolProxy.getUniqueID(), 
-									bodyProxy);						
+									protocolProxy.getBody(),
+									protocolProxy.getRepositoryType());			
+							
+							// build a digest blackboard message
+							digestProtocol = new DigestReady(
+									protocolProxy.getUniqueID(),
+									"[" + StringWork.getNowDate() + "] " +
+									"Concept Parsing Process has started for Job ID: " + 
+											protocolProxy.getUniqueID(),
+									ComponentList.DIGEST); 
+							blackboardOutgoingQueue.add(digestProtocol);
 							break;
 							
 						case METADATAANALYSIS:
@@ -177,7 +194,17 @@ public class ParseObject extends DSL {
 							// do an entire metadata file analysis 
 							parseMetadataFile(
 									protocolProxy.getUniqueID(), 
-									bodyProxy);
+									protocolProxy.getBody(),
+									protocolProxy.getRepositoryType());
+							
+							// build a digest blackboard message
+							digestProtocol = new DigestReady(
+									protocolProxy.getUniqueID(),
+									"[" + StringWork.getNowDate() + "] " +
+									"Metadata Parsing Process has started for Job ID: " + 
+											protocolProxy.getUniqueID(),
+									ComponentList.DIGEST); 
+							blackboardOutgoingQueue.add(digestProtocol);
 							break;
 							
 						default:
@@ -293,6 +320,21 @@ public class ParseObject extends DSL {
 		Gson gson = new Gson(); String message = null;
 		switch (protocol.getComponentTarget()) {
 		
+			case DIGEST:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to PROXY Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+	
+				// blackboard message to concepts component
+				message = gson.toJson((DigestReady)protocol);
+				blackboard.put(Tuple(TupleKey.PROXYDIGEST, message));				
+				break;
+
 			case ANNOTATIONS:
 				// log action
 				if (this.verbose) {
@@ -347,15 +389,172 @@ public class ParseObject extends DSL {
 
 	}
 
+	private void parseMetadataConcept(
+			UUID jobUUID, 
+			byte[] body,
+			RepositoryType repository) {
+	
+		// check target repository
+		boolean parserFound = false;
+		MetaData metaData = null; int parseStatus = 0;
+		switch (repository) {
+		
+			case METOBOLIGHTS:
+				// this is a metobolights repository concept
+				metaData = parseMetoboLightsConcept(jobUUID, body);
+
+				// set parser initial status
+				parseStatus = 7;
+				parserFound = true;
+				break;
+	
+			default:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: There isn't any repository type to analyse.",
+							LogType.ERROR,
+							ComponentList.LOG));
+				}
+				break;
+		}
+		
+		// there's a parser for the request
+		if (parserFound) {
+			
+			// add to active jobs list
+			ParseJob parseJob = new ParseJob(
+					jobUUID, 
+					metaData, 
+					parseStatus, 
+					RequestType.CONCEPTANALYSIS);
+			metadataActiveJobs.put(jobUUID, parseJob);
+
+			// send the result directly to calculus component
+			ParseReadyOutgoing classProtocol = new ParseReadyOutgoing(
+					jobUUID,
+					metaData,
+					ComponentList.CALCULUS,
+					RequestType.CONCEPTANALYSIS);
+			blackboardOutgoingQueue.add(classProtocol);				
+
+		}
+	}
+	
 	/**
 	 * 
 	 * @param jobUUID
 	 */
 	private void parseMetadataFile(
 			UUID jobUUID, 
-			byte[] body) {
+			byte[] body,
+			RepositoryType repository) {
+		
+		//
+		boolean parserFound = false;
+		MetaData metaData = null; int parseStatus = 0;
+		switch (repository) {
+		
+			case METOBOLIGHTS:
+				// this is a metobolights repository file
+				metaData = parseMetoboLightsFile(jobUUID, body);
 				
-		// TODO: Averiguar a hipóstese de saber que parser utilizar
+				// set parser initial status
+				parseStatus = 3;
+				parserFound = true;
+				break;
+	
+			default:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: There isn't any repository type to analyse.",
+							LogType.ERROR,
+							ComponentList.LOG));
+				}
+				break;
+		}
+		
+		// there's a parser for the request
+		if (parserFound) {
+			
+			// add to active jobs list
+			ParseJob parseJob = new ParseJob(
+					jobUUID, 
+					metaData, 
+					parseStatus, 
+					RequestType.METADATAANALYSIS);
+			metadataActiveJobs.put(jobUUID, parseJob);
+
+			// delegate class search job
+			ParseDelegateOutgoing classProtocol = new ParseDelegateOutgoing(
+					jobUUID,
+					metaData.getMetaClasses(),
+					body,
+					ComponentList.ANNOTATIONS,
+					RequestType.METADATAANALYSIS,
+					repository);
+			blackboardOutgoingQueue.add(classProtocol);
+			
+			// delegate term search job
+			ParseDelegateOutgoing termProtocol = new ParseDelegateOutgoing(
+					jobUUID,
+					metaData.getMetaClasses(),
+					body,
+					ComponentList.TERMS,
+					RequestType.METADATAANALYSIS,
+					repository); 
+			blackboardOutgoingQueue.add(termProtocol);
+		}
+	}
+	
+	/**
+	 * 
+	 * @param jobUUID
+	 * @param body
+	 * @return
+	 */
+	private MetaData parseMetoboLightsConcept(
+			UUID jobUUID,
+			byte[] body) {
+
+		// build stub metadata object
+		MetaData metaData = new MetaData(
+				null,
+				jobUUID,
+				CLASS_DEFAULT,
+				MetaObjective.CONCEPTANALYSIS);		
+
+		try {
+			// define checksum property
+			metaData.setCheckSum(body);
+			
+		} catch (NoSuchAlgorithmException e) {
+			// log action
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: An error as occured parsing calculating " + 
+					"metadata file body.",
+					LogType.ERROR,
+					ComponentList.LOG));
+		}		
+		
+		// add the new concept to default class
+		metaData.addConceptToClass(
+				new String(body), 
+				CLASS_DEFAULT[0]);
+		
+		return metaData;
+	}
+	
+	/**
+	 * 
+	 * @param jobUUID
+	 * @param body
+	 * @return
+	 */
+	private MetaData parseMetoboLightsFile(
+			UUID jobUUID,
+			byte[] body) {
 		
 		// parse metadata header
 		IMetaHeader parseHeader = new ParseHeaderMetaboLights(body);
@@ -382,28 +581,8 @@ public class ParseObject extends DSL {
 		IMetaOntologies parseOntologies = new ParseOntologiesMetaboLights(body);
 		metaData.addOntologies(parseOntologies.getMetaOntologies());		
 		
-		// add to active jobs list
-		ParseJob parseJob = new ParseJob(jobUUID, metaData, 3);
-		metadataActiveJobs.put(jobUUID, parseJob);
-
-		// delegate class search job
-		ParseDelegateOutgoing classProtocol = new ParseDelegateOutgoing(
-				jobUUID,
-				metaData.getMetaClasses(),
-				body,
-				ComponentList.ANNOTATIONS,
-				RequestType.METADATAANALYSIS);
-		blackboardOutgoingQueue.add(classProtocol);
-		
-		// delegate term search job
-		ParseDelegateOutgoing termProtocol = new ParseDelegateOutgoing(
-				jobUUID,
-				metaData.getMetaClasses(),
-				body,
-				ComponentList.TERMS,
-				RequestType.METADATAANALYSIS); 
-		blackboardOutgoingQueue.add(termProtocol);
-		
+		//
+		return metaData;
 	}
 	
 	/**
@@ -826,13 +1005,14 @@ public class ParseObject extends DSL {
 					ParseJob activeJob = entry.getValue();
 					switch (activeJob.getParseStatus()) {
 						case 10:
-							// the parse job is complet, so send a blackboard message 
+							// the parse job is complete, so send a blackboard message 
 							// to calculus component
 							metaData = activeJob.getMetaData();
 							ParseReadyOutgoing protocol = new ParseReadyOutgoing(
 									entry.getKey(), 
 									metaData,
-									ComponentList.CALCULUS);
+									ComponentList.CALCULUS,
+									activeJob.getRequestType());
 							sendBLBMessage(protocol);
 							
 							// add this job to deletion job list
@@ -872,8 +1052,6 @@ public class ParseObject extends DSL {
 					}					
 				}
 				
-				// TODO: log action
-				
 				// wait for 5 seconds
 				try {
 					Thread.sleep(5000);
@@ -882,7 +1060,6 @@ public class ParseObject extends DSL {
 					
 				}
 			}
-
 		}
 
 	}

@@ -7,5 +7,6 @@ public enum ComponentList {
 	TERMS,
 	LOG,
 	CALCULUS,
-	OWL;
+	OWL,
+	DIGEST;
 }
