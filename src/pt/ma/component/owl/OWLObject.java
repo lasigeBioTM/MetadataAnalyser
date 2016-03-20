@@ -175,9 +175,9 @@ public class OWLObject extends DSL {
 		boolean foundprefix = false; int counter = 0;
 		while (!foundprefix && counter < dataprefixs.getOntologies().size()) {
 			// find a prefix database match
-			String dataprefix = dataprefixs.getOntologies().get(counter);
+			String dataprefix = dataprefixs.getOntologies().get(counter);			
 			if (uri.trim().toLowerCase().contains(dataprefix.toLowerCase())) {
-				// build schema name for this prefix
+				// build schema name for this prefix				
 				dbname += "_" + dataprefix;
 				foundprefix = true;
 			}

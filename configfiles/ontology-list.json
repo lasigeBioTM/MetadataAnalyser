@@ -1,0 +1,21 @@
+{
+    "ontologies": [
+		"bao",
+		"bto",
+		"chmo",
+		"cmo",
+		"efo",
+		"envo",
+		"hl7",
+		"mp",
+		"ms",
+		"nemo",
+		"obi",
+		"pato",
+		"po",
+		"sdon",
+		"sbo",
+		"uo",
+		"xco"
+	]
+}
