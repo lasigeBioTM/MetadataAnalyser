@@ -79,12 +79,21 @@ public class ParseObject extends DSL {
 	
 	/**
 	 * 
+	 */
+	private int threadLoop;
+	
+	/**
+	 * 
 	 * @param blackboard
 	 * @param verbose
 	 */
 	public ParseObject(
-			IBlackboard blackboard, 
+			IBlackboard blackboard,
+			int threadLoop,
 			boolean verbose) {
+		
+		//
+		this.threadLoop = threadLoop;
 		this.verbose = verbose;
 
 		// assign blackboard instance
@@ -118,10 +127,7 @@ public class ParseObject extends DSL {
 				this.verbose)).start();
 
 		// open a thread to check job completeness
-		new Thread(new ParseProcessJobList(
-				this.blackboard,
-				this.metadataActiveJobs,
-				this.blackboardOutgoingQueue)).start();
+		new Thread(new ParseProcessJobList(this.metadataActiveJobs)).start();
 
 		// open a thread for writing to the blackboard
 		new Thread(new ParseBlackboardWrite(blackboardOutgoingQueue)).start();
@@ -943,7 +949,7 @@ public class ParseObject extends DSL {
 								
 					// wait for 5 seconds
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(threadLoop);
 					} catch (InterruptedException e) {
 						// TODO: log action
 						
@@ -962,16 +968,6 @@ public class ParseObject extends DSL {
 	private class ParseProcessJobList extends DSL implements Runnable {
 
 		/**
-		 * Locally managed blackboard instance
-		 */
-		private IBlackboard blackboard;
-
-		/**
-		 * 
-		 */
-		private Queue<MessageProtocol> outgoingQueue;
-
-		/**
 		 * 
 		 */
 		private Map<UUID, ParseJob> metadataActiveJobs;
@@ -981,14 +977,9 @@ public class ParseObject extends DSL {
 		 * @param blackboard
 		 * @param outgoingQueue
 		 */
-		public ParseProcessJobList(
-				IBlackboard blackboard, 
-				Map<UUID, ParseJob> metadataActiveJobs,
-				Queue<MessageProtocol> outgoingQueue) {
-			
-			this.blackboard = blackboard;
+		public ParseProcessJobList(Map<UUID, ParseJob> metadataActiveJobs) {
+			//
 			this.metadataActiveJobs = metadataActiveJobs;
-			this.outgoingQueue = outgoingQueue;
 			
 		}
 
@@ -1055,7 +1046,7 @@ public class ParseObject extends DSL {
 				
 				// wait for 5 seconds
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(threadLoop);
 				} catch (InterruptedException e) {
 					// TODO: log action
 					

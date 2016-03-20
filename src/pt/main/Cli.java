@@ -35,8 +35,16 @@ public class Cli {
 	 */
 	private boolean optionVerbose;
 	private boolean optionInstallDB;
+	private String optionTCPAddress;
 	private int optionTCPPort;
-
+	private String optionDBName;
+	private String optionDBServer;
+	private String optionDBUser;
+	private String optionDBPassword;
+	private int optionLoopDuration;
+	private String optionTestURL;
+	private boolean optionCache;
+	
 	/**
 	 * 
 	 * @param args
@@ -52,13 +60,29 @@ public class Cli {
 		// set options default values
 		optionVerbose = false;
 		optionInstallDB = false;
+		optionTCPAddress = "127.0.0.1";
 		optionTCPPort = 8080;
+		optionDBName = "owltosql";
+		optionDBServer = "127.0.0.1";
+		optionDBUser = "owltosql";
+		optionDBPassword = "owltosql";
+		optionLoopDuration = 100;
+		optionTestURL = null;
+		optionCache = true;
 		
 		// add the necessary application options
 		options.addOption("h", "help", false, "Show help.");
 		options.addOption("v", "verbose", true, "Verbose application output.");
 		options.addOption("i", "installdb", true, "Run OWL installation procedures.");
-		options.addOption("p", "tcpport", true, "Run OWL installation procedures.");
+		options.addOption("a", "tcpaddress", true, "Establish TCP listen socket address.");
+		options.addOption("p", "tcpport", true, "Establish TCP listen socket port.");
+		options.addOption("n", "dbname", true, "MySQL Server Database name.");
+		options.addOption("s", "dbserver", true, "MySQL Server address.");
+		options.addOption("u", "dbuser", true, "MySQL Server user.");
+		options.addOption("w", "dbpassword", true, "MySQL Server user password.");
+		options.addOption("l", "loopduration", true, "Thread loop duration in mileseconds.");
+		options.addOption("t", "testurl", true, "URL to test output connections.");
+		options.addOption("c", "cache", true, "Cache database specificity results.");
 
 	}
 
@@ -93,7 +117,14 @@ public class Cli {
 					optionInstallDB = Boolean.valueOf(cmd.getOptionValue("i"));
 					log.log(
 							Level.INFO, 
-							"Value for option Install DB -v = " + optionInstallDB);
+							"Value for option Install DB -i = " + optionInstallDB);
+				}
+				if (cmd.hasOption("a")) {
+					// gather verbose option value
+					optionTCPAddress = String.valueOf(cmd.getOptionValue("a"));
+					log.log(
+							Level.INFO, 
+							"Value for option TCP Address -a = " + optionTCPAddress);
 				}
 				if (cmd.hasOption("p")) {
 					try {
@@ -101,7 +132,7 @@ public class Cli {
 						optionTCPPort = Integer.valueOf(cmd.getOptionValue("p"));
 						log.log(
 								Level.INFO, 
-								"Value for option TCP Port -v = " + optionTCPPort);
+								"Value for option TCP Port -p = " + optionTCPPort);
 						
 					} catch (NumberFormatException e) {
 						log.log(
@@ -111,6 +142,65 @@ public class Cli {
 						help();
 						result = false;
 					}
+				}
+				if (cmd.hasOption("n")) {
+					// gather verbose option value
+					optionDBName = String.valueOf(cmd.getOptionValue("n"));
+					log.log(
+							Level.INFO, 
+							"Value for option DB name -n = " + optionDBName);
+				}				
+				if (cmd.hasOption("s")) {
+					// gather verbose option value
+					optionDBServer = String.valueOf(cmd.getOptionValue("s"));
+					log.log(
+							Level.INFO, 
+							"Value for option DB Server address -s = " + optionDBServer);
+				}
+				if (cmd.hasOption("u")) {
+					// gather verbose option value
+					optionDBUser = String.valueOf(cmd.getOptionValue("u"));
+					log.log(
+							Level.INFO, 
+							"Value for option DB user name -u = " + optionDBUser);
+				}
+				if (cmd.hasOption("w")) {
+					// gather verbose option value
+					optionDBPassword = String.valueOf(cmd.getOptionValue("w"));
+					log.log(
+							Level.INFO, 
+							"Value for option DB user password -w = " + optionDBPassword);
+				}
+				if (cmd.hasOption("l")) {
+					try {
+						// gather verbose option value
+						optionLoopDuration = Integer.valueOf(cmd.getOptionValue("l"));
+						log.log(
+								Level.INFO, 
+								"Value for option Thread Loop Duration -l = " + optionLoopDuration);
+						
+					} catch (NumberFormatException e) {
+						log.log(
+								Level.SEVERE, 
+								"Failed to parse comand line LoopDuration. Incorrect format.", 
+								e);
+						help();
+						result = false;
+					}					
+				}
+				if (cmd.hasOption("t")) {
+					// gather verbose option value
+					optionTestURL = String.valueOf(cmd.getOptionValue("t"));
+					log.log(
+							Level.INFO, 
+							"Value for option test URL -t = " + optionTestURL);
+				}
+				if (cmd.hasOption("c")) {
+					// gather verbose option value
+					optionCache = Boolean.valueOf(cmd.getOptionValue("c"));
+					log.log(
+							Level.INFO, 
+							"Value for option Cache -c = " + optionCache);
 				}
 			}
 			
@@ -157,8 +247,72 @@ public class Cli {
 	 * 
 	 * @return
 	 */
+	public String getOptionTCPAddress() {
+		return optionTCPAddress;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
 	public int getOptionTCPPort() {
 		return optionTCPPort;
 	}
-	
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getOptionDBName() {
+		return optionDBName;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getOptionDBServer() {
+		return optionDBServer;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getOptionDBUser() {
+		return optionDBUser;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getOptionDBPassword() {
+		return optionDBPassword;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public int getOptionLoopDuration() {
+		return optionLoopDuration;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getOptionTestURL() {
+		return optionTestURL;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean isOptionCache() {
+		return optionCache;
+	}
+
 }

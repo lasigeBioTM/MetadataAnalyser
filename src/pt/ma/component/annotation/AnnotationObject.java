@@ -16,7 +16,6 @@ import pt.blackboard.protocol.DigestReady;
 import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.ParseDelegateOutgoing;
-import pt.blackboard.protocol.ParseReadyOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
 import pt.ma.component.log.LogType;
 import pt.ma.component.parse.RepositoryType;
@@ -24,7 +23,6 @@ import pt.ma.component.parse.interfaces.IMetaAnnotations;
 import pt.ma.component.parse.metabolights.ParseAnnotationsMetaboLights;
 import pt.ma.metadata.MetaAnnotation;
 import pt.ma.metadata.MetaClass;
-import pt.ma.metadata.MetaData;
 import pt.ma.util.StringWork;
 
 /**
@@ -51,12 +49,21 @@ public class AnnotationObject extends DSL {
 
 	/**
 	 * 
+	 */
+	private int threadLoop;
+			
+	/**
+	 * 
 	 * @param blackboard
 	 * @param verbose
 	 */
 	public AnnotationObject(
-			IBlackboard blackboard, 
+			IBlackboard blackboard,
+			int threadLoop,
 			boolean verbose) {
+		
+		//
+		this.threadLoop = threadLoop; 
 		this.verbose = verbose;
 		
 		// assign blackboard instance
@@ -407,12 +414,10 @@ public class AnnotationObject extends DSL {
 					
 					// send this message to blackboard
 					sendBLBMessage(outgoingQueue.poll());
-									
-					// TODO: log action
 					
 					// wait for 5 seconds
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(threadLoop);
 					} catch (InterruptedException e) {
 						// TODO: log action
 						

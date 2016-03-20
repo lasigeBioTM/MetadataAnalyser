@@ -52,34 +52,57 @@ public class ParseAnnotationsMetaboLights implements IMetaAnnotations {
 		int annoCounter = 0;
 		String source = new String(metafile);
 		Scanner scanner = new Scanner(source);
-		while(scanner.hasNext()) {
-			//
-			String line = scanner.nextLine();
-			matcher = patternP.matcher(line);
-			if (matcher.find()) {
+		try {
+			while(scanner.hasNext()) {
 				//
-				matcher = patternC.matcher(line);
-				while (matcher.find()) {
-					for(int i = 0; i < matcher.groupCount(); i++) {
+				String line = scanner.nextLine();
+				try {
+					matcher = patternP.matcher(line);
+					if (matcher.find()) {
+						//
 						try {
-							// 
-							String annoURI = StringWork.sanitaze(matcher.group(i).trim());
-							if (annoURI.length() > 0) {
-								String annoID = "ANNO_" + String.valueOf(annoCounter); 
-								MetaAnnotation annotation = new MetaAnnotation(annoID, annoURI);
-								annotations.add(annotation);
-								annoCounter++;
+							matcher = patternC.matcher(line);
+							while (matcher.find()) {
+								for(int i = 0; i < matcher.groupCount(); i++) {
+									// 
+									String annoURI = StringWork.sanitaze(matcher.group(i).trim());
+									if (annoURI.length() > 0) {
+										String annoID = "ANNO_" + String.valueOf(annoCounter); 
+										MetaAnnotation annotation = new MetaAnnotation(annoID, annoURI);
+										if (!haveAnnotation(annotations, annotation)) {
+											annotations.add(annotation);
+										}
+										annoCounter++;
+									}
+								}				
 							}
-
+							
 						} catch (Exception e) {
-							// TODO: log action
-						}
-					}				
+							//
+							System.out.println("Annotations Parse RegExC Exception: " + 
+									line + "; " + e.getMessage());
+						}						
+					}
+					
+				} catch (Exception e) {
+					//
+					System.out.println("Annotations Parse RegExP Exception: " + 
+							line + "; " + e.getMessage());
 				}
-				
 			}
+			
+		} catch (IllegalStateException e) {
+			//
+			System.out.println("Terms Parse Illegal State Exception: " + 
+					source + "; " + e.getMessage());
+		} catch (Exception e) {
+			//
+			System.out.println("Terms Parse Exception: " + 
+					source + "; " + e.getMessage());
+		} finally {
+			//
+			scanner.close();
 		}
-		scanner.close();
 		
 		//
 		return annotations;
@@ -89,9 +112,28 @@ public class ParseAnnotationsMetaboLights implements IMetaAnnotations {
 	 * 
 	 */
 	@Override
-	public void setMetaFile(byte[] file) {
+	public void setMetaFile(byte[] metafile) {
 		this.metafile = metafile;
 		
 	}
 
+	// PRIVATE METHODS
+	
+	private boolean haveAnnotation(
+			List<MetaAnnotation> annotations, 
+			MetaAnnotation annotation) {
+		//
+		boolean result = false;
+		//
+		int counter = 0;
+		while (!result && counter < annotations.size()) {
+			MetaAnnotation item = annotations.get(counter);
+			if (annotation.equals(item)) {
+				result = true;
+			}
+			counter++;
+		}	
+		//
+		return result;
+	}
 }

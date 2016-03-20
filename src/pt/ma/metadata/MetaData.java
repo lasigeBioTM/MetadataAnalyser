@@ -313,6 +313,11 @@ public class MetaData {
 		}
 		
 	}
+	
+
+	public String getId() {
+		return id;
+	}
 
 	@Override
 	public String toString() {				

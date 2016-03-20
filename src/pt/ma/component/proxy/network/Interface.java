@@ -19,7 +19,12 @@ import java.util.Observer;
 public class Interface extends Observable {
 
 	/**
-	 * 
+	 * Server socket address (ex. 127.0.0.1) 
+	 */
+	private InetAddress sourceAddress;
+	
+	/**
+	 * Server socket TCP port (ex. 8080)
 	 */
 	private int sourceTCPPort;
 	
@@ -31,16 +36,20 @@ public class Interface extends Observable {
 	/**
 	 * 
 	 * @param observer
+	 * @param sourceAddress
 	 * @param sourceTCPPort
 	 * @param verbose
+	 * @throws UnknownHostException 
 	 */
 	public Interface(
-			Observer observer, 
+			Observer observer,
+			String sourceAddress,
 			int sourceTCPPort, 
-			boolean verbose) {
+			boolean verbose) throws UnknownHostException {
 		super();
 		
 		// Establish class properties 
+		this.sourceAddress = InetAddress.getByName(sourceAddress);
 		this.sourceTCPPort = sourceTCPPort;
 		this.verbose = verbose;
 		
@@ -54,7 +63,9 @@ public class Interface extends Observable {
 		
 		// start listening to incoming messages
 		new Thread(
-				new InputMessagingThread(sourceTCPPort)).start();
+				new InputMessagingThread(
+						this.sourceAddress ,
+						this.sourceTCPPort)).start();
 		
 	}
 	
@@ -234,17 +245,24 @@ public class Interface extends Observable {
 		/**
 		 * 
 		 */
+		private InetAddress address;
+		
+		/**
+		 * 
+		 */
 		private int tcpPort;
 		
 		/**
 		 * 
 		 * @param tcpPort
 		 */
-		public InputMessagingThread ( 
+		public InputMessagingThread (
+				InetAddress address,
 				int tcpPort) {
 			super();
 			
 			// Establish class properties
+			this.address = address;
 			this.tcpPort = tcpPort;
 			
 			//
@@ -268,7 +286,7 @@ public class Interface extends Observable {
 				}
 				
 				// try to open a server socket
-				server = new ServerSocket(this.tcpPort);
+				server = new ServerSocket(tcpPort, 0, address);
 				
 				// Infinite loop
 				while (!Thread.currentThread().isInterrupted()) {

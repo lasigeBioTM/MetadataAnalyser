@@ -1,2 +1,0 @@
-"[2016/02/11 11:19:49] Acknowledgement message for Metadata Analysis, Job ID: 32060b41-450c-466e-8a72-2368aa3f92f2"
-"[2016/02/11 11:19:54] Concept Parsing Process has started for Job ID: 32060b41-450c-466e-8a72-2368aa3f92f2"

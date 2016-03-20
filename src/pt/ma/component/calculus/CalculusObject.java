@@ -18,6 +18,7 @@ import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.CalculusDelegateOutgoing;
 import pt.blackboard.protocol.CalculusReadyOutgoing;
+import pt.blackboard.protocol.DigestReady;
 import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.OWLReadyOutgoing;
@@ -29,6 +30,7 @@ import pt.ma.exception.InactiveJobException;
 import pt.ma.metadata.MetaAnnotation;
 import pt.ma.metadata.MetaClass;
 import pt.ma.metadata.MetaData;
+import pt.ma.util.StringWork;
 
 /**
  * 
@@ -51,7 +53,7 @@ public class CalculusObject extends DSL {
 	 * 
 	 */
 	private Map<UUID, CalculusJob> metadataActiveJobs;
-
+	
 	/**
 	 * 
 	 */
@@ -59,17 +61,27 @@ public class CalculusObject extends DSL {
 
 	/**
 	 * 
+	 */
+	private int threadLoop;
+	
+	/**
+	 * 
 	 * @param blackboard
 	 * @param verbose
 	 */
 	public CalculusObject(
-			IBlackboard blackboard, 
+			IBlackboard blackboard,
+			int threadLoop,
 			boolean verbose) {
+		
+		//
+		this.threadLoop = threadLoop;
 		this.verbose = verbose;
+		
 		
 		// assign blackboard instance
 		this.blackboard = blackboard;
-		
+				
 		// start active parse jobs data structure
 		this.metadataActiveJobs = new ConcurrentHashMap<UUID, CalculusJob>();
 		
@@ -102,9 +114,7 @@ public class CalculusObject extends DSL {
 				this.verbose)).start();
 		
 		// open a thread for writing to the blackboard
-		new Thread(new ParseBlackboardWrite(
-				this.blackboard, 
-				blackboardOutgoingQueue)).start();
+		new Thread(new ParseBlackboardWrite(blackboardOutgoingQueue)).start();
 
 	}
 	
@@ -142,6 +152,16 @@ public class CalculusObject extends DSL {
 							ComponentList.LOG));
 					}
 					
+					// build a digest blackboard message
+					int classCount = protocolParse.getBody().getMetaClasses().size();
+					DigestReady digestProtocol = new DigestReady(
+							protocolParse.getUniqueID(),
+							"[" + StringWork.getNowDate() + "] " +
+							"Metadata Calculus Parsing is about to start (Classes #" + classCount + ") for Job ID: " + 
+							protocolParse.getUniqueID(),
+							ComponentList.DIGEST); 
+					sendBLBMessage(digestProtocol);
+
 					// start calculation process for this request
 					parseParseRequest(
 							protocolParse.getUniqueID(),
@@ -159,8 +179,9 @@ public class CalculusObject extends DSL {
 				break;
 				
 			case OWL:
+				
 				try {
-					// a new message from OWL component				
+					// a new message from the OWL component				
 					OWLReadyOutgoing protocolOWL = gson.fromJson(
 							message, 
 							OWLReadyOutgoing.class);
@@ -176,6 +197,16 @@ public class CalculusObject extends DSL {
 								ComponentList.LOG));
 					}
 					
+					// build a digest blackboard message
+					String className = protocolOWL.getBody().getClassName();
+					DigestReady digestProtocol = new DigestReady(
+							protocolOWL.getUniqueID(),
+							"[" + StringWork.getNowDate() + "] " +
+							"Metadata Calculus Parsing concluded for Class " + className + " in Job ID: " + 
+							protocolOWL.getUniqueID(),
+							ComponentList.DIGEST); 
+					sendBLBMessage(digestProtocol);
+
 					// start OWL response parsing
 					parseOWLResponse(
 							protocolOWL.getUniqueID(), 
@@ -215,6 +246,21 @@ public class CalculusObject extends DSL {
 		Gson gson = new Gson(); String message = null;
 		switch (protocol.getComponentTarget()) {
 		
+			case DIGEST:
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: About to send a Blackboard message " + 
+							"to PROXY Component, for Job ID: " + protocol.getUniqueID(),
+							LogType.INFO,
+							ComponentList.LOG));
+				}
+	
+				// blackboard message to concepts component
+				message = gson.toJson((DigestReady)protocol);
+				blackboard.put(Tuple(TupleKey.PROXYDIGEST, message));				
+				break;
+
 			case OWL:
 				// log action
 				if (this.verbose) {
@@ -279,7 +325,7 @@ public class CalculusObject extends DSL {
 
 			// set reference to this job class 
 			jobActive.setJobTask(metaClass);
-			
+				
 			// delegate class search job
 			CalculusDelegateOutgoing classProtocol = new CalculusDelegateOutgoing(
 					jobUUID,
@@ -354,6 +400,9 @@ public class CalculusObject extends DSL {
 	}
 	
 	/**
+	 * Determines the specificity and coverage meta-data values. The specificity value is 
+	 * calculated over the average of all annotations present in the study. The coverage 
+	 * value is calculated taking into account all the annotated and non-annotated terms.
 	 * 
 	 * @param jobUUID
 	 * @param metaData
@@ -362,29 +411,48 @@ public class CalculusObject extends DSL {
 			UUID jobUUID,
 			MetaData metaData) {
 		
-		// sum up all class specificity and coverage values
-		double sumSpecs = 0f; double sumCovs = 0f;
-		for (MetaClass metaClass : metaData.getMetaClasses()) {
-			sumSpecs += metaClass.getSpecValue();
-			sumCovs += metaClass.getCovValue();
-		}
+		// average specificity and coverage values
+		double avgMetaSpec = 0f; double avgMetaCov = 0f;
 		
-		// meta data overall specificity value
-		metaData.setSpecValue(sumSpecs);
-		if (sumSpecs > 0) {
-			metaData.setSpecValue(
-					sumSpecs / 
-					Double.valueOf(metaData.getMetaClasses().size()));
+		// iterate over all classes in meta-data
+		int metaTermCounter = 0;
+		int metaAnnoCounter = 0; int metaAnnoNACounter = 0;
+		for (MetaClass metaClass : metaData.getMetaClasses()) {
+			// iterate over each class annotation collection
+			for (MetaAnnotation metaAnnotation : metaClass.getMetaAnnotations()) {
+				double specValue = metaAnnotation.getSpecValue();
+				if (specValue >= 0) {
+					// increment global meta specification value
+					avgMetaSpec += specValue;
+					
+				} else {
+					// no value was found for this annotation, so this one will not 
+					// be considered for meta specificity calculation
+					metaAnnoNACounter++;
+					
+				}
+				// increment global meta-data annotations counter
+				metaAnnoCounter++;
+			}
+			// sum all used terms in the classes
+			metaTermCounter += metaClass.getMetaTerms().size();
+		}
+				
+		// determine average meta specificity value taking only in consideration 
+		// annotations with values over 0
+		double validAnnotations = Double.valueOf(metaAnnoCounter - metaAnnoNACounter);
+		metaData.setSpecValue(avgMetaSpec);
+		if (avgMetaSpec > 0) {
+			avgMetaSpec = (double)(avgMetaSpec / validAnnotations); 
+			metaData.setSpecValue(avgMetaSpec);
 		}
 
-		// meta data overall specificity value
-		metaData.setCovValue(sumCovs);
-		if (sumCovs > 0) {
-			metaData.setCovValue(
-					sumCovs / 
-					Double.valueOf(metaData.getMetaClasses().size()));
+		// determine average coverage ratio between annotations and terms
+		metaData.setCovValue(avgMetaCov);
+		if (validAnnotations > 0 && metaTermCounter > 0) {
+			avgMetaCov = (double)(validAnnotations / Double.valueOf(metaTermCounter)); 
+			metaData.setCovValue(avgMetaCov);
 		}
-		
 	}
 	
 	/**
@@ -430,17 +498,21 @@ public class CalculusObject extends DSL {
 	}
 	
 	/**
+	 * Determine the average specificity value for the given meta class. Only annotations found 
+	 * in the database are eligible for calculation.
 	 * 
-	 * @param jobUUID
-	 * @param metaData
+	 * @param jobUUID engine job unique identifier
+	 * @param metaClass the class used to calculate the average value
 	 */
 	private void calculateClassAvgSpecValue(
 			UUID jobUUID,
 			MetaClass metaClass) {
-					
-		// iterate trough all meta class annotations
+		
+		// average specificity and coverage values
 		double avgClassSpec = 0f;
-		List<MetaAnnotation> offsetAnnotations = new ArrayList<MetaAnnotation>();
+		
+		// iterate trough all meta class annotations
+		int metaAnnoCounter = 0; int metaAnnoNACounter = 0;
 		for (MetaAnnotation metaAnnotation : metaClass.getMetaAnnotations()) {
 			double specValue = metaAnnotation.getSpecValue();
 			if (specValue >= 0) {
@@ -450,48 +522,59 @@ public class CalculusObject extends DSL {
 			} else {
 				// no value was found for this annotation, so this one will not 
 				// be considered for class specificity calculation
-				offsetAnnotations.add(metaAnnotation);
+				metaAnnoNACounter++;
+				
 			}
+			// increment global class annotations counter
+			metaAnnoCounter++;
 		}
 		
-		// set denominator specificity value
-		int specDenominator = (
-				metaClass.getMetaAnnotations().size() - 
-				offsetAnnotations.size());
-		
-		// calculate average specificity value for this class
-		if (avgClassSpec > 0 && specDenominator > 0) {
-			avgClassSpec = (double)(
-					Double.valueOf(avgClassSpec) / 
-					Double.valueOf(specDenominator));
-			
-		} else {
-			avgClassSpec = 0f;
-			
+		// calculate and set average specificity value for this class
+		double validAnnotations = Double.valueOf(metaAnnoCounter - metaAnnoNACounter);
+		if (avgClassSpec > 0) {
+			avgClassSpec = (double)(avgClassSpec / validAnnotations);
 		}
 		metaClass.setSpecValue(avgClassSpec);
-		
 	}
 
 	/**
+	 * Determine the average coverage value for the given meta class. The coverage is calculated 
+	 * by finding the ratio between all valid annotations, i.e. the ones that a specificity was 
+	 * found, and all class used terms.
 	 * 
-	 * @param jobUUID
-	 * @param metaData
+	 * @param jobUUID engine job unique identifier
+	 * @param metaClass the class used to calculate the average value
 	 */
 	private void calculateClassAvgCovValue(
 			UUID jobUUID,
 			MetaClass metaClass) {
-					
-		// calculate average specificity value for this class
-		double avgCovValue = 0f;
-		if (metaClass.getMetaAnnotations().size() > 0 && 
-				metaClass.getMetaTerms().size() > 0) {
-			avgCovValue = (double)
-				   (Double.valueOf(metaClass.getMetaAnnotations().size()) / 
-						   Double.valueOf(metaClass.getMetaTerms().size()));
-		}
-		metaClass.setCovValue(avgCovValue);			
 		
+		// average coverage value, defaults to 0
+		double avgCovValue = 0f;
+		
+		// determine valid annotations counter
+		// iterate trough all meta class annotations
+		int metaAnnoCounter = 0; int metaAnnoNACounter = 0;
+		for (MetaAnnotation metaAnnotation : metaClass.getMetaAnnotations()) {
+			double specValue = metaAnnotation.getSpecValue();
+			if (specValue < 0) {
+				// no value was found for this annotation, so this one will not 
+				// be considered for class specificity calculation
+				metaAnnoNACounter++;
+				
+			}
+			// increment annotations global class counter
+			metaAnnoCounter++;
+		}
+
+		// calculate average specificity value for this class
+		double termCounter = Double.valueOf(metaClass.getMetaTerms().size()); 
+		double validAnnotations = Double.valueOf(metaAnnoCounter - metaAnnoNACounter);		
+		if (validAnnotations > 0 && termCounter > 0) {
+			avgCovValue = (double)(validAnnotations / termCounter);
+		}
+		metaClass.setCovValue(avgCovValue);
+
 	}
 
 	// PRIVATE CLASSES
@@ -695,7 +778,16 @@ public class CalculusObject extends DSL {
 						// set completion time stamp
 						metaData.setParseDuration(System.currentTimeMillis());
 						
-						// send a blackboard message to calculus component
+						// build a digest blackboard message
+						DigestReady digestProtocol = new DigestReady(
+								entry.getKey(),
+								"[" + StringWork.getNowDate() + "] " +
+								"Metadata Calculus Parsing has ended for Job ID: " + 
+								entry.getKey(),
+								ComponentList.DIGEST); 
+						sendBLBMessage(digestProtocol);
+						
+						// send a blackboard message to proxy component
 						CalculusReadyOutgoing protocol = new CalculusReadyOutgoing(
 								entry.getKey(), 
 								metaData,
@@ -715,7 +807,7 @@ public class CalculusObject extends DSL {
 				
 				// wait for 5 seconds
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(threadLoop);
 				} catch (InterruptedException e) {
 					// TODO: log action
 					
@@ -733,11 +825,6 @@ public class CalculusObject extends DSL {
 	private class ParseBlackboardWrite extends DSL implements Runnable {
 
 		/**
-		 * Locally managed blackboard instance
-		 */
-		private IBlackboard blackboard;
-
-		/**
 		 * 
 		 */
 		private Queue<MessageProtocol> outgoingQueue;
@@ -747,10 +834,8 @@ public class CalculusObject extends DSL {
 		 * @param blackboard
 		 * @param outgoingQueue
 		 */
-		public ParseBlackboardWrite(
-				IBlackboard blackboard, 
-				Queue<MessageProtocol> outgoingQueue) {
-			this.blackboard = blackboard;
+		public ParseBlackboardWrite(Queue<MessageProtocol> outgoingQueue) {
+			//
 			this.outgoingQueue = outgoingQueue;
 			
 		}
@@ -767,11 +852,9 @@ public class CalculusObject extends DSL {
 					// send this message to blackboard
 					sendBLBMessage(outgoingQueue.poll());
 									
-					// TODO: log action
-					
 					// wait for 5 seconds
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(threadLoop);
 					} catch (InterruptedException e) {
 						// TODO: log action
 						

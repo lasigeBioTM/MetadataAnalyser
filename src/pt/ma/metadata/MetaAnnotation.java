@@ -140,11 +140,15 @@ public class MetaAnnotation implements Serializable {
 		return conceptIdentifier;
 	}
 	
+	
+	
+	// PRIVATE METHODS
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((uniqueID == null) ? 0 : uniqueID.hashCode());
+		result = prime * result + ((uri == null) ? 0 : uri.hashCode());
 		return result;
 	}
 
@@ -157,16 +161,14 @@ public class MetaAnnotation implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		MetaAnnotation other = (MetaAnnotation) obj;
-		if (uniqueID == null) {
-			if (other.uniqueID != null)
+		if (uri == null) {
+			if (other.uri != null)
 				return false;
-		} else if (!uniqueID.equals(other.uniqueID))
+		} else if (!uri.toLowerCase().equals(other.uri.toLowerCase()))
 			return false;
 		return true;
 	}
-	
-	// PRIVATE METHODS
-	
+
 	/**
 	 * 
 	 */

@@ -50,7 +50,7 @@ public class ParseHeaderMetaboLights implements IMetaHeader {
 				itemFound = true;
 			}
 		}
-				
+		scanner.close();
 		return result;
 	}
 
@@ -61,7 +61,7 @@ public class ParseHeaderMetaboLights implements IMetaHeader {
 	}
 
 	@Override
-	public void setMetaFile(byte[] file) {
+	public void setMetaFile(byte[] metafile) {
 		//
 		this.metafile = metafile;
 		

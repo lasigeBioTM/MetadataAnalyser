@@ -73,11 +73,12 @@ public class MetaTerm implements Serializable {
 		return name;
 	}
 
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((uniqueId == null) ? 0 : uniqueId.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
 	}
 
@@ -90,10 +91,10 @@ public class MetaTerm implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		MetaTerm other = (MetaTerm) obj;
-		if (uniqueId == null) {
-			if (other.uniqueId != null)
+		if (name == null) {
+			if (other.name != null)
 				return false;
-		} else if (!uniqueId.equals(other.uniqueId))
+		} else if (!name.toLowerCase().equals(other.name.toLowerCase()))
 			return false;
 		return true;
 	}

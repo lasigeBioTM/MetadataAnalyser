@@ -1,5 +1,6 @@
 package pt.ma.component.proxy;
 
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
@@ -44,6 +45,11 @@ public class ProxyObject extends DSL implements Observer {
 	/**
 	 * 
 	 */
+	private int threadLoop;
+	
+	/**
+	 * 
+	 */
 	private IBlackboard blackboard;
 
 	/**
@@ -64,25 +70,37 @@ public class ProxyObject extends DSL implements Observer {
 	/**
 	 * 
 	 */
+	private String sourceAddress;
+	
+	/**
+	 * 
+	 */
 	private int sourcePort;
 
 	/**
 	 * 
 	 * @param blackboard
+	 * @param sourceAddress
 	 * @param sourcePort
 	 * @param verbose
+	 * @throws UnknownHostException
 	 */
 	public ProxyObject(
 			IBlackboard blackboard, 
-			int sourcePort, 
-			boolean verbose)  {
+			String sourceAddress,
+			int sourcePort,
+			int threadLoop,
+			boolean verbose) throws UnknownHostException  {
+		
 		//
+		this.threadLoop = threadLoop;
 		this.verbose = verbose;
 
 		// Assign blackboard instance
 		this.blackboard = blackboard;
 		
-		//
+		// set network address and port configuration
+		this.sourceAddress = sourceAddress;
 		this.sourcePort = sourcePort;
 		
 		//
@@ -113,14 +131,12 @@ public class ProxyObject extends DSL implements Observer {
 				this.verbose)).start();
 				
 		// open a thread for writing to the blackboard
-		new Thread(new ProxyBlackboardWrite(
-				this.blackboard, 
-				this.blackboardOutgoingQueue, 
-				this.verbose)).start();
+		new Thread(new ProxyBlackboardWrite(this.blackboardOutgoingQueue)).start();
 		
 		// open network interface
 		network = new Interface(
-				this, 
+				this,
+				this.sourceAddress,
 				this.sourcePort, 
 				this.verbose);
 	}
@@ -358,10 +374,6 @@ public class ProxyObject extends DSL implements Observer {
 
 				// get proxy map object for this uuid
 				mapObject = tpcReceivedMessagesMap.get(protocolCalculus.getUniqueID());
-
-				// prepare the output message to be sent to original unique id				
-				jsonBody = gson.toJson(protocolCalculus.getBody());
-				respbody = jsonBody.getBytes();
 				
 				// log action
 				if (this.verbose) {
@@ -374,7 +386,23 @@ public class ProxyObject extends DSL implements Observer {
 							ComponentList.LOG));
 				}
 
-				// build and send a new TCP message
+				// prepare the output message to be sent to original unique id				
+				jsonBody = "[" + StringWork.getNowDate() + "] " +
+							"Metadata Calculus Parsing has ended for Job ID: " + 
+							protocolCalculus.getUniqueID();
+				respbody = jsonBody.getBytes();
+
+				// build and send final TCP digest message
+				sendTCPMessage(
+						MessageType.TCPDIGEST, 
+						mapObject, 
+						respbody);
+
+				// prepare the output message to be sent to original unique id				
+				jsonBody = gson.toJson(protocolCalculus.getBody());
+				respbody = jsonBody.getBytes();
+
+				// build and send TCP response message
 				sendTCPMessage(
 						MessageType.TCPRESPONSE, 
 						mapObject, 
@@ -557,16 +585,6 @@ public class ProxyObject extends DSL implements Observer {
 	 *
 	 */
 	private class ProxyBlackboardWrite extends DSL implements Runnable {
-
-		/**
-		 * Locally managed blackboard instance
-		 */
-		private IBlackboard blackboard;
-
-		/**
-		 * 
-		 */
-		private boolean verbose;
 		
 		/**
 		 * 
@@ -578,13 +596,8 @@ public class ProxyObject extends DSL implements Observer {
 		 * @param blackboard
 		 * @param outgoingQueue
 		 */
-		public ProxyBlackboardWrite(
-				IBlackboard blackboard, 
-				Queue<MessageProtocol> outgoingQueue,
-				boolean verbose) {
-			this.blackboard = blackboard;
+		public ProxyBlackboardWrite(Queue<MessageProtocol> outgoingQueue) {
 			this.outgoingQueue = outgoingQueue;
-			this.verbose = verbose;
 			
 		}
 
@@ -602,7 +615,7 @@ public class ProxyObject extends DSL implements Observer {
 
 					// wait for 5 seconds
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(threadLoop);
 					} catch (InterruptedException e) {
 						// TODO: log action
 						
@@ -670,15 +683,7 @@ public class ProxyObject extends DSL implements Observer {
 			this.receivedTimestamp = receivedTimestamp;
 			
 		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		public UUID getRequestUUID() {
-			return requestUUID;
-		}
-
+		
 		/**
 		 * 
 		 * @return
@@ -693,30 +698,6 @@ public class ProxyObject extends DSL implements Observer {
 		 */
 		public int getSenderTCPPort() {
 			return senderTCPPort;
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		public long getSentTimestamp() {
-			return sentTimestamp;
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		public long getReceivedTimestamp() {
-			return receivedTimestamp;
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		public RequestType getRequestType() {
-			return requestType;
 		}
 
 		/**

@@ -1,11 +1,15 @@
 package pt.ma.component.owl;
 
+import java.io.File;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.google.gson.Gson;
@@ -15,22 +19,29 @@ import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
 import pt.blackboard.protocol.CalculusDelegateOutgoing;
+import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
 import pt.blackboard.protocol.OWLReadyOutgoing;
 import pt.blackboard.protocol.enums.ComponentList;
-import pt.ma.database.MySQLLogin;
+import pt.ma.component.log.LogType;
+import pt.ma.database.MySQLFactory;
 import pt.ma.exception.InactiveJobException;
 import pt.ma.metadata.MetaAnnotation;
 import pt.ma.metadata.MetaClass;
-import pt.owlsql.Application;
+import pt.ma.util.FileWork;
 
 /**
  * 
  * 
  *
+ *
  */
 public class OWLObject extends DSL {
 
+	/**
+	 * 
+	 */
+	private OntologyList dataprefixs;
 	
 	/**
 	 * 
@@ -40,13 +51,53 @@ public class OWLObject extends DSL {
 	/**
 	 * 
 	 */
+	private Map<String, Connection> connections;
+	
+	/**
+	 * 
+	 */
+	private Map<String, Double> metadataCacheAnnotations;
+
+	/**
+	 * 
+	 */
 	private Queue<MessageProtocol> blackboardOutgoingQueue;
 	
 	/**
 	 * 
 	 */
 	private boolean isDBAvailable;
-
+	
+	/**
+	 * 
+	 */
+	private boolean verbose;
+	
+	/**
+	 * 
+	 */
+	private boolean cache;
+	
+	/**
+	 * 
+	 */
+	private int threadLoop;
+	
+	/**
+	 * 
+	 */
+	private String dbServerAddress;
+	
+	/**
+	 * 
+	 */
+	private String dbUserName;
+	
+	/**
+	 * 
+	 */
+	private String dbUserPassword;
+	
 	/**
 	 * 
 	 * @param blackboard
@@ -55,9 +106,34 @@ public class OWLObject extends DSL {
 	public OWLObject(
 			IBlackboard blackboard, 
 			boolean installDatabase,
-			boolean verbose) {
+			String dbName,
+			String dbServerAddress,
+			String dbUserName,
+			String dbUserPassword,
+			int threadLoop,
+			boolean verbose,
+			boolean cache) {
 		
-		// start database installation
+		//
+		this.threadLoop = threadLoop;
+		this.verbose = verbose;
+		this.cache = cache;
+		
+		// sets connections map
+		connections	= new HashMap<String, Connection>();
+		
+		// establish the MySQL database parameters
+		this.dbServerAddress = dbServerAddress;
+		this.dbUserName = dbUserName;
+		this.dbUserPassword = dbUserPassword;
+		
+		// establish the MySQL schema names
+		Gson gson = new Gson();
+		dataprefixs = gson.fromJson(FileWork.readContentIntoString(
+				new File("configfiles/ontology-list.json")), 
+				OntologyList.class); 
+				
+		// installs a new database schema if necessary
 		if (installDatabase) {
 			new Thread(new DatabaseInstallation()).start();
 			
@@ -68,7 +144,10 @@ public class OWLObject extends DSL {
 		
 		// assign blackboard instance
 		this.blackboard = blackboard;
-				
+
+		// instantiate annotation cache map
+		this.metadataCacheAnnotations = new ConcurrentHashMap<String, Double>();
+		
 		// set blackboard outgoing messages queue
 		this.blackboardOutgoingQueue = new LinkedBlockingQueue<MessageProtocol>();
 
@@ -86,6 +165,98 @@ public class OWLObject extends DSL {
 	
 	/**
 	 * 
+	 * @param uri
+	 * @return
+	 */
+	private Connection getAnnotationConnection(String uri) {
+		
+		// find a schema prefix for the given annotation URI
+		String dbname = "owltosql";
+		boolean foundprefix = false; int counter = 0;
+		while (!foundprefix && counter < dataprefixs.getOntologies().size()) {
+			// find a prefix database match
+			String dataprefix = dataprefixs.getOntologies().get(counter);
+			if (uri.trim().toLowerCase().contains(dataprefix.toLowerCase())) {
+				// build schema name for this prefix
+				dbname += "_" + dataprefix;
+				foundprefix = true;
+			}
+			counter++;
+		}
+
+		// is there a prefix match in annotation URI
+		Connection result = null;
+		if (foundprefix) {
+			// is there already an opened connection for this database
+			if (connections.containsKey(dbname)) {
+				// there's a match so use the available connection
+				result = connections.get(dbname);
+				try {
+					if (result.isClosed()) {
+						result = openConnection(dbname);
+					}
+					
+				} catch (Exception e) {
+					// log action
+					if (this.verbose) {
+						blackboardOutgoingQueue.add(new LogIngoing( 
+								"[" + this.getClass().getName() + "]: A SQL exception as occurred, " + 
+										" attempting to reopen an existing database conection for database " + dbname +  
+										", with message: " + e.getMessage(),
+								LogType.ERROR,
+								ComponentList.LOG));
+					}
+				}
+								
+			} else {
+				
+				try {
+					// open a new connection for the given database
+					result = openConnection(dbname);		
+					// add it to the map collection
+					connections.put(dbname, result);
+				
+				} catch (Exception e) {
+					// log action
+					if (this.verbose) {
+						blackboardOutgoingQueue.add(new LogIngoing( 
+								"[" + this.getClass().getName() + "]: A SQL exception as occurred, " + 
+										" attempting to open a new database connection for database " + dbname +  
+										", with message: " + e.getMessage(),
+								LogType.ERROR,
+								ComponentList.LOG));
+					}
+				}
+			}			
+		} 
+		//
+		return result;
+	}
+
+	/**
+	 * 
+	 * @param dbname
+	 * @return
+	 * @throws Exception 
+	 * @throws SQLException 
+	 */
+	private Connection openConnection(String dbname) throws SQLException, Exception {
+		
+		// open a new connection for the given database
+		MySQLFactory factory = MySQLFactory.getInstance();
+		
+		// set new database connection parameters
+		factory.setDriver("com.mysql.jdbc.Driver");
+		factory.setURL("jdbc:mysql://" + dbServerAddress + "/" + dbname);
+		factory.setAuthentication(dbUserName, dbUserPassword);
+		Connection result = factory.getConnection();
+		
+		//
+		return result;
+	}
+	
+	/**
+	 * 
 	 * @param message
 	 * @param source
 	 */
@@ -98,7 +269,7 @@ public class OWLObject extends DSL {
 		switch (source) {
 		
 			case CALCULUS:
-				try {
+
 					// a new message from Parse component
 					CalculusDelegateOutgoing protocolParse = gson.fromJson(
 							message, 
@@ -107,10 +278,6 @@ public class OWLObject extends DSL {
 							protocolParse.getUniqueID(),
 							protocolParse.getBody());
 					
-				} catch (InactiveJobException e) {
-					// TODO log action
-
-				}
 				break;
 			
 			default:
@@ -133,14 +300,13 @@ public class OWLObject extends DSL {
 			case CALCULUS:
 				// blackboard message to proxy component
 				message = gson.toJson((OWLReadyOutgoing)protocol);
-				blackboard.put(Tuple(TupleKey.OWLOUT, message));
-				
-				// TODO: log action
-				
+				blackboard.put(Tuple(TupleKey.OWLOUT, message));				
 				break;
 
 			default:
-				// TODO: log action
+				// log action
+				message = gson.toJson((LogIngoing)protocol);
+				blackboard.put(Tuple(TupleKey.LOGIN, message));
 				break;
 		}
 
@@ -154,46 +320,93 @@ public class OWLObject extends DSL {
 	 */
 	private void parseCalculusRequest(
 			UUID jobUUID, 
-			MetaClass requestBody) throws InactiveJobException {
+			MetaClass requestBody)  {
 				
-		// TODO: log action
-		
-		try {
-			// iterate through all annotations from the meta class
-			Connection database = MySQLLogin.getConnection();
-			CallableStatement statement = database.prepareCall("{call sp_conceptspec(?, ?)}");
-			for (MetaAnnotation metaAnno : requestBody.getMetaAnnotations()) {
-				
-				try {
-					// get specificity value from DB
-					String conceptIRI = metaAnno.getURI();
-					statement.setString("concept_iri", conceptIRI);
-					statement.registerOutParameter("spec_value", Types.NUMERIC);
-					statement.execute();
-					double specValue = statement.getDouble("spec_value");
-					if (specValue >= 0) {
-						metaAnno.setSpecValue(specValue);
-						
-					} else {
-						// no result was returned, specify default value
-						metaAnno.setSpecValue(-1f);
-						
-						// TODO log action
-					}
-					
-				} catch (Exception e) {
-					// TODO log action
-					
-				}
-				
-
-			}
-			
-		} catch (SQLException e) {
-			// TODO log action
-
+		// log action
+		if (this.verbose) {
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: About to calculate specificity values for Job ID: " + jobUUID,
+					LogType.INFO,
+					ComponentList.LOG));
 		}
 		
+		// iterate through all annotations from the meta class
+		//Connection database = MySQLLogin.getConnection();	
+		for (MetaAnnotation metaAnno : requestBody.getMetaAnnotations()) {
+			String conceptIRI = null;
+			try {
+				// get specificity value from DB
+				conceptIRI = metaAnno.getURI().toLowerCase();
+				
+				// check if there's already an available annotation value
+				if (cache & metadataCacheAnnotations.containsKey(conceptIRI)) {
+					
+					// recover cached concept specificty value
+					metaAnno.setSpecValue(metadataCacheAnnotations.get(conceptIRI));
+					
+				} else {
+					
+					try {
+						// there's no cached value for this concept, so try to figure it out
+						double specValue = -1f;
+						Connection database = getAnnotationConnection(conceptIRI);
+						if (database != null && !database.isClosed()) {
+							// query about annotation specificity value
+							CallableStatement statement = database.prepareCall("{call sp_conceptspec(?, ?)}");
+							statement.setString("concept_iri", conceptIRI);
+							statement.registerOutParameter("spec_value", Types.NUMERIC);
+							statement.execute();
+							specValue = statement.getDouble("spec_value");
+							statement.close();
+							
+						}
+						metaAnno.setSpecValue(specValue);
+
+						// if no result was returned do some log action
+						if (specValue < 0) {						
+							// log action
+							if (this.verbose) {
+								blackboardOutgoingQueue.add(new LogIngoing( 
+										"[" + this.getClass().getName() + "]: No ontology was found " + 
+												"for concept: " + conceptIRI,
+										LogType.INFO,
+										ComponentList.LOG));
+							}
+						}
+						
+						// add specificity concept value to cache map
+						if (cache) {
+							metadataCacheAnnotations.put(
+									conceptIRI, 
+									metaAnno.getSpecValue());
+						}
+						
+					} catch (SQLException e) {
+						// log action
+						if (this.verbose) {
+							blackboardOutgoingQueue.add(new LogIngoing( 
+									"[" + this.getClass().getName() + "]: A SQL exception as occurred, " + 
+											" attempting to create a callable statement from database object" +  
+											", with message: " + e.getMessage(),
+									LogType.ERROR,
+									ComponentList.LOG));
+						}
+					}
+				}
+								
+			} catch (Exception e) {
+				// log action
+				if (this.verbose) {
+					blackboardOutgoingQueue.add(new LogIngoing( 
+							"[" + this.getClass().getName() + "]: A exception as occurred, " + 
+									"calculanting specificity value for concept: " + conceptIRI + 
+									", with message: " + e.getMessage(),
+							LogType.ERROR,
+							ComponentList.LOG));
+				}
+			}
+		}
+					
 		// send results back to calculus component
 		OWLReadyOutgoing classProtocol = new OWLReadyOutgoing(
 				jobUUID,
@@ -201,8 +414,13 @@ public class OWLObject extends DSL {
 				ComponentList.CALCULUS);
 		blackboardOutgoingQueue.add(classProtocol);
 		
-		// TODO: log action
-
+		// log action
+		if (this.verbose) {
+			blackboardOutgoingQueue.add(new LogIngoing( 
+					"[" + this.getClass().getName() + "]: Specificity calculus is over for Job ID: " + jobUUID,
+					LogType.INFO,
+					ComponentList.LOG));
+		}
 	}
 	
 	// PRIVATE CLASSES
@@ -296,11 +514,9 @@ public class OWLObject extends DSL {
 					// send this message to blackboard
 					sendBLBMessage(outgoingQueue.poll());
 									
-					// TODO: log action
-					
 					// wait for 5 seconds
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(threadLoop);
 					} catch (InterruptedException e) {
 						// TODO: log action
 						
@@ -326,7 +542,7 @@ public class OWLObject extends DSL {
 			String[] args = new String[2];
 			args[0] = "-u";
 			args[1] = "file";
-			Application.main(args);
+			//Application.main(args);
 			
 			//
 			isDBAvailable = true;

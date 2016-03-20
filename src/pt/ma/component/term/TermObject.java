@@ -11,7 +11,6 @@ import pt.blackboard.DSL;
 import pt.blackboard.IBlackboard;
 import pt.blackboard.Tuple;
 import pt.blackboard.TupleKey;
-import pt.blackboard.protocol.AnnotationsOutgoing;
 import pt.blackboard.protocol.DigestReady;
 import pt.blackboard.protocol.LogIngoing;
 import pt.blackboard.protocol.MessageProtocol;
@@ -23,7 +22,6 @@ import pt.ma.component.parse.RepositoryType;
 import pt.ma.component.parse.interfaces.IMetaTerms;
 import pt.ma.component.parse.metabolights.ParseTermsMetaboLights;
 import pt.ma.metadata.MetaClass;
-import pt.ma.metadata.MetaData;
 import pt.ma.metadata.MetaTerm;
 import pt.ma.util.StringWork;
 
@@ -51,12 +49,21 @@ public class TermObject extends DSL {
 	
 	/**
 	 * 
+	 */
+	private int threadLoop;
+	
+	/**
+	 * 
 	 * @param blackboard
 	 * @param verbose
 	 */
 	public TermObject(
-			IBlackboard blackboard, 
+			IBlackboard blackboard,
+			int threadLoop,
 			boolean verbose) {
+		
+		//
+		this.threadLoop = threadLoop;
 		this.verbose = verbose;
 		
 		// assign blackboard instance
@@ -79,9 +86,7 @@ public class TermObject extends DSL {
 				this.verbose)).start();
 				
 		// open a thread for writing to the blackboard
-		new Thread(new ParseBlackboardWrite(
-				this.blackboard, 
-				blackboardOutgoingQueue)).start();
+		new Thread(new ParseBlackboardWrite(blackboardOutgoingQueue)).start();
 
 	}
 	
@@ -97,8 +102,7 @@ public class TermObject extends DSL {
 			ComponentList source) {
 
 		// parse protocol message
-		Gson gson = new Gson();
-		UUID jobUUID = null; MetaData jobActive = null; 
+		Gson gson = new Gson(); 
 		switch (source) {
 			case PARSE:
 				try {
@@ -383,24 +387,15 @@ public class TermObject extends DSL {
 	private class ParseBlackboardWrite extends DSL implements Runnable {
 
 		/**
-		 * Locally managed blackboard instance
-		 */
-		private IBlackboard blackboard;
-
-		/**
 		 * 
 		 */
 		private Queue<MessageProtocol> outgoingQueue;
 
 		/**
 		 * 
-		 * @param blackboard
 		 * @param outgoingQueue
 		 */
-		public ParseBlackboardWrite(
-				IBlackboard blackboard, 
-				Queue<MessageProtocol> outgoingQueue) {
-			this.blackboard = blackboard;
+		public ParseBlackboardWrite(Queue<MessageProtocol> outgoingQueue) {
 			this.outgoingQueue = outgoingQueue;
 			
 		}
@@ -419,7 +414,7 @@ public class TermObject extends DSL {
 									
 					// wait for 5 seconds
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(threadLoop);
 					} catch (InterruptedException e) {
 						// TODO: log action
 						
