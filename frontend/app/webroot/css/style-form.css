@@ -1,0 +1,70 @@
+/* CSS Document */
+
+#formcontainer {
+	margin: 0 auto;
+	width: 90%;
+}
+.form-container {
+	width: 100%;
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+.form-container .field-desc {
+	text-align: right;
+	vertical-align: middle;
+	padding-bottom: 10px;
+	padding-right: 15px;
+}
+.form-container .field-value {
+	padding-bottom: 10px;
+	text-align: left;
+	vertical-align: middle;
+}
+
+.form-container input, 
+.form-container label, 
+.form-container select, 
+.form-container textarea {
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 30px;
+	width: 90%;
+	margin: 0 auto;
+	font-family: 'Open Sans', sans-serif;
+	color: #4e4f4f;
+}
+.form-container select {
+	width: 75%;
+}
+
+#progresslayer {
+	width: 90%;
+	margin: 0 auto;
+}
+#progresslayer .progress-label {
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 30px;
+	margin: 0 auto;
+	font-family: 'Open Sans', sans-serif;
+	color: #4e4f4f;
+	text-align: center;
+}
+#progresspan {
+	padding: 5px;
+	text-align: left;
+	
+}
+#progresspan p {
+	font-size: 12px;
+	margin: 0 auto;
+	font-family: 'Open Sans', sans-serif;
+	line-height: 16px;
+}
+#ajaxlayer {
+	margin-top: 30px;
+}
+.desc p.align {
+	text-align: justify;
+	margin-top: 10px;
+}
