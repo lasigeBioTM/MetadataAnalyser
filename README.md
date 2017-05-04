@@ -7,3 +7,5 @@ The tool is composed of the following components (in separate folders):
 - frontend: interacts with the user by requesting a metadata file;
 - engine: analyses the metadata file and evaluates the annotations found therein;
 - webapi: connects the interface to the application component;
+
+More information: https://www.researchgate.net/publication/316280432_Metadata_Analyser_measuring_metadata_quality
