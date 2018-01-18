@@ -8,4 +8,8 @@ The tool is composed of the following components (in separate folders):
 - engine: analyses the metadata file and evaluates the annotations found therein;
 - webapi: connects the interface to the application component;
 
-More information: https://www.researchgate.net/publication/316280432_Metadata_Analyser_measuring_metadata_quality
+## References: 
+
+- J. Ferreira, B. Inácio, R. Salek, and F. Couto, “Assessing public metabolomics metadata, towards improving quality,” Journal of Integrative Bioinformatics, vol. 14, no. 4, pp. 1--28, 2017 (https://doi.org/10.1515/jib-2017-0054)
+
+- B. Inácio, J. Ferreira, and F. Couto, “Metadata analyser: measuring metadata quality,” in Practical Applications of Computational Biology and Bioinformatics (PACBB), pp. 197--204, 2017 (https://doi.org/10.1007/978-3-319-60816-7_24)
